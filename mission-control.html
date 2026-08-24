@@ -847,9 +847,9 @@ function renderBriefSummary(){
   updateDeckProgress(true);
 }
 function openNews(){ if(!DECK.length||deckPos>=DECK.length){ restartBrief(); } else { renderDeck(); } $("#newsPopup").classList.add("show"); }
-function closeNews(){ $("#newsPopup").classList.remove("show"); try{sessionStorage.setItem("lyzr_news_seen","1");}catch(e){} go("home");
-  let tourSeen=false; try{tourSeen=sessionStorage.getItem("lyzr_mc_tour")==="1";}catch(e){}
-  if(!tourSeen) setTimeout(showTour,400); /* mandatory demo tour after the brief, once per visit */ }
+let tourShownThisLoad=false;
+function closeNews(){ $("#newsPopup").classList.remove("show"); go("home");
+  if(!tourShownThisLoad){ tourShownThisLoad=true; setTimeout(showTour,400); } /* mandatory demo tour right after the brief, every open */ }
 
 /* ================= ONBOARDING TOUR ================= */
 const TOUR=[
@@ -868,7 +868,7 @@ function renderTour(){
   $("#tourBack").style.visibility=tourStep===0?'hidden':'visible';
   $("#tourNext").textContent=tourStep===TOUR.length-1?'Start →':'Next';
 }
-function endTour(){ $("#tour").classList.remove("show"); try{sessionStorage.setItem("lyzr_mc_tour","1");}catch(e){} }
+function endTour(){ $("#tour").classList.remove("show"); }
 $("#tourNext").addEventListener("click",()=>{ if(tourStep<TOUR.length-1){tourStep++;renderTour();} else endTour(); });
 $("#tourBack").addEventListener("click",()=>{ if(tourStep>0){tourStep--;renderTour();} });
 $("#tourSkip").addEventListener("click",endTour);
@@ -891,7 +891,7 @@ function boot(){
     DB=db; initSim(); renderAll();
     $("#overlay").style.display="none";
     $("#conn").innerHTML=`<span class="dot"></span>${LIVE?'Live · Supabase':'Preview data'}`;
-    try{ if(!sessionStorage.getItem("lyzr_news_seen")) openNews(); }catch(e){ openNews(); }
+    openNews(); /* news brief opens FIRST on every load — no storage gating */
   }).catch(err=>{
     $("#overlay .spin").style.display="none";
     $("#overlayMsg").innerHTML=`<b style="color:var(--bad)">Couldn't reach Supabase.</b><br>${err.message}<br><br>This build reads live from the <code>Lyzr-Mission-Control</code> project. Check the project is active and the anon key is valid, then <button class="btn sm" onclick="location.reload()">retry</button>.`;
