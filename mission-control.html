@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Lyzr $100M Mission Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#1A100B; --bg2:#211611; --surface:#2A1D16; --surface2:#34251B;
+    --border:#3D2C21; --border2:#4E392B;
+    --text:#F6EDE5; --text2:#CBB6A7; --muted:#9B8373;
+    --accent:#DE7A45; --accent2:#E9A46A;
+    --good:#48CFA1; --warn:#F0AD46; --bad:#F0685C;
+    --pos:#E98A50; --neg:#4CB7A4;
+    --shadow:0 14px 38px rgba(0,0,0,.5); --r:16px;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:radial-gradient(1300px 800px at 78% -12%, #4A2C1B 0%, transparent 55%),radial-gradient(1000px 700px at -8% 8%, #3A2214 0%, transparent 52%),linear-gradient(180deg,#20140D 0%, var(--bg) 55%);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1360px;margin:0 auto;padding:0 22px 90px}
+  header.top{position:sticky;top:0;z-index:50;backdrop-filter:blur(12px);background:linear-gradient(180deg,rgba(20,12,8,.94),rgba(20,12,8,.74));border-bottom:1px solid var(--border)}
+  .top-inner{max-width:1360px;margin:0 auto;padding:12px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:11px;font-weight:600;letter-spacing:.2px;font-family:var(--serif)}
+  .logo{height:34px;border-radius:9px;background:#fff;padding:4px 6px;display:grid;place-items:center;box-shadow:0 2px 12px rgba(0,0,0,.4)}
+  .logo img{height:24px;display:block}
+  .brand small{display:block;font-weight:500;color:var(--text2);font-size:11px;font-family:var(--sans)}
+  .tabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:99px;padding:4px}
+  @media(max-width:900px){.tabs{max-width:100%;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}}
+  .tab{border:0;background:transparent;color:var(--text2);padding:8px 13px;border-radius:99px;cursor:pointer;font-size:12.5px;font-weight:600;font-family:inherit;white-space:nowrap;transition:.15s}
+  .tab:hover{color:var(--text)}
+  .tab.active{background:var(--accent);color:#fff;box-shadow:0 4px 14px rgba(222,122,69,.4)}
+  .top-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+  .conn{display:flex;align-items:center;gap:7px;color:var(--text2);font-size:12px;white-space:nowrap}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 rgba(72,207,161,.6);animation:pulse 2s infinite}
+  .dot.err{background:var(--bad);animation:none}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(72,207,161,.5)}70%{box-shadow:0 0 0 8px rgba(72,207,161,0)}100%{box-shadow:0 0 0 0 rgba(72,207,161,0)}}
+  .btn{border:1px solid var(--border2);background:rgba(255,255,255,.04);color:var(--text);padding:8px 14px;border-radius:99px;cursor:pointer;font-size:12.5px;font-weight:600;font-family:inherit;display:inline-flex;gap:7px;align-items:center;transition:.15s}
+  .btn:hover{border-color:var(--accent);background:rgba(222,122,69,.12)}
+  .btn.sm{padding:5px 10px;font-size:11.5px}
+
+  .view{display:none;animation:fade .35s ease}.view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:none}}
+  .section-title{display:flex;align-items:baseline;gap:12px;margin:26px 2px 14px;flex-wrap:wrap}
+  .section-title h2{font-size:22px;margin:0;font-family:var(--serif);font-weight:600;color:var(--text)}
+  .section-title p{margin:0;color:var(--muted);font-size:12.5px}
+  .hint{color:var(--muted);font-size:12px}
+  .card{background:linear-gradient(180deg,var(--surface),var(--bg2));border:1px solid var(--border);border-radius:var(--r);padding:16px;box-shadow:var(--shadow)}
+  .cols{display:grid;gap:14px}
+  .c-2-1{grid-template-columns:1.6fr 1fr}.c-1-1{grid-template-columns:1fr 1fr}
+  @media(max-width:960px){.c-2-1,.c-1-1{grid-template-columns:1fr}}
+  .card h3{margin:0 0 3px;font-size:14px}.card .csub{color:var(--muted);font-size:12px;margin-bottom:12px}
+  .tabnum{font-variant-numeric:tabular-nums}
+
+  /* mission header */
+  .mission-hero{background:linear-gradient(135deg,rgba(222,122,69,.16),rgba(42,29,22,.4)),linear-gradient(180deg,var(--surface),var(--bg2));border:1px solid var(--border2);border-radius:20px;padding:22px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+  .mh-top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap}
+  .mh-title{font-family:var(--serif);font-size:30px;font-weight:600;line-height:1.05}
+  .mh-title em{font-style:italic;color:var(--accent2)}
+  .mh-sub{color:var(--text2);font-size:13px;margin-top:4px}
+  .mh-stats{display:flex;gap:26px;flex-wrap:wrap;margin-top:20px;align-items:flex-end}
+  .mh-stat .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+  .mh-stat .v{font-size:32px;font-weight:700;font-family:var(--serif);font-variant-numeric:tabular-nums;line-height:1.1}
+  .mh-stat .d{font-size:12px;color:var(--text2)}
+  .gauge-wrap{margin-left:auto;text-align:center}
+  .gauge-wrap .lab{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-top:2px}
+  .barcmp{height:12px;border-radius:7px;background:var(--bg2);overflow:hidden;margin-top:14px;position:relative}
+  .barcmp>i{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  .barcmp .tick{position:absolute;top:-4px;width:2px;height:20px;background:var(--text)}
+
+  /* sim */
+  .sim{display:grid;grid-template-columns:1.1fr 1fr;gap:18px}
+  @media(max-width:900px){.sim{grid-template-columns:1fr}}
+  .slider{margin-bottom:13px}
+  .slider label{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text2)}
+  .slider label b{color:var(--text);font-variant-numeric:tabular-nums}
+  input[type=range]{width:100%;margin-top:6px;accent-color:var(--accent)}
+  .simout{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .simcell{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:11px 13px}
+  .simcell .k{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;font-weight:700}
+  .simcell .v{font-size:22px;font-weight:700;font-family:var(--serif);font-variant-numeric:tabular-nums;margin-top:3px}
+  .simcell .delta{font-size:11px;font-weight:700}
+  .up{color:var(--good)}.down{color:var(--bad)}
+
+  /* health chips */
+  .health{display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+  @media(max-width:900px){.health{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:520px){.health{grid-template-columns:repeat(2,1fr)}}
+  .hchip{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px}
+  .hchip .l{font-size:11px;color:var(--text2);font-weight:600}
+  .hchip .s{font-size:26px;font-weight:700;font-family:var(--serif);font-variant-numeric:tabular-nums;display:flex;align-items:baseline;gap:5px}
+  .hchip .s span{font-size:13px}
+
+  .gaprow{display:flex;align-items:center;gap:10px;padding:6px 0}
+  .gaprow .nm{width:200px;font-size:12.5px;color:var(--text2)}
+  .gaprow .tr{flex:1;height:11px;background:var(--bg2);border-radius:6px;overflow:hidden}
+  .gaprow .tr>i{display:block;height:100%;border-radius:6px;background:var(--bad)}
+  .gaprow .amt{width:52px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+
+  /* funnel */
+  .fstage{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px dashed var(--border)}
+  .fstage:last-child{border:0}
+  .fstage .fl{width:170px;font-size:12.5px}
+  .fstage .fl small{display:block;color:var(--muted);font-size:11px}
+  .fbars{flex:1;display:flex;flex-direction:column;gap:3px}
+  .fbar{height:9px;border-radius:5px;position:relative;background:var(--bg2)}
+  .fbar>i{display:block;height:100%;border-radius:5px}
+  .fstage .fv{width:150px;text-align:right;font-size:11.5px;font-variant-numeric:tabular-nums;color:var(--text2)}
+  .fstage .fv b{color:var(--text)}
+
+  /* feed */
+  .feed{display:flex;flex-direction:column;gap:12px}
+  .fitem{border:1px solid var(--border);border-radius:14px;background:var(--surface);padding:15px;position:relative;overflow:hidden}
+  .fitem::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}
+  .sev-critical::before{background:var(--bad)}.sev-opportunity::before{background:var(--good)}.sev-watch::before{background:var(--warn)}.sev-blindspot::before{background:var(--accent2)}
+  .fitem .fh{display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+  .fitem .ft{font-weight:700;font-size:14.5px}
+  .fdollar{font-family:var(--serif);font-weight:700;font-size:15px}
+  .tag{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--bg2);border:1px solid var(--border);color:var(--text2);text-transform:uppercase;letter-spacing:.3px}
+  .qa{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:8px 0;font-size:12.5px}
+  .qa .q{color:var(--muted);font-weight:700;white-space:nowrap}
+  .qa .a{color:var(--text2)}
+  .frec{background:var(--bg2);border:1px dashed var(--border2);border-radius:10px;padding:9px 11px;font-size:12.5px;margin-top:8px}
+  .factions{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+  .fdone{margin-top:11px;font-size:12px;color:var(--good);font-weight:700}
+
+  /* matrix */
+  .quad-legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--text2);margin-top:8px}
+  .quad-legend b{color:var(--text)}
+  table{width:100%;border-collapse:collapse}
+  th,td{text-align:left;padding:9px 10px;font-size:12.5px;border-bottom:1px solid var(--border)}
+  th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  tbody tr:hover{background:var(--surface2)}
+  .pill{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px}
+  .p-dd{background:rgba(72,207,161,.16);color:var(--good)}.p-fix{background:rgba(240,173,70,.16);color:var(--warn)}
+  .p-re{background:rgba(233,164,106,.16);color:var(--accent2)}.p-stop{background:rgba(240,104,92,.16);color:var(--bad)}
+
+  /* dept grid */
+  .depts{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:1100px){.depts{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:820px){.depts{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.depts{grid-template-columns:1fr}}
+  .dcard{cursor:pointer;transition:.15s}.dcard:hover{transform:translateY(-3px);border-color:var(--accent)}
+  .dcard .dh{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+  .dcard .ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:15px}
+  .dcard .nm{font-weight:700;font-size:13.5px}
+  .twoscore{display:flex;gap:10px;margin-top:8px}
+  .twoscore .sc{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px}
+  .twoscore .sc .k{font-size:10px;color:var(--muted);text-transform:uppercase}
+  .twoscore .sc .v{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+  .mini{height:6px;background:var(--bg2);border-radius:4px;margin-top:9px;overflow:hidden}.mini>i{display:block;height:100%;border-radius:4px}
+
+  .backdrop{position:fixed;inset:0;background:rgba(4,7,14,.66);backdrop-filter:blur(3px);z-index:80;display:none}.backdrop.show{display:block}
+  .drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,94vw);background:var(--bg2);border-left:1px solid var(--border2);z-index:90;transform:translateX(100%);transition:.28s cubic-bezier(.2,.8,.2,1);overflow-y:auto;box-shadow:-20px 0 50px rgba(0,0,0,.5)}
+  .drawer.show{transform:none}
+  .drawer .dhd{position:sticky;top:0;background:linear-gradient(180deg,var(--surface),var(--bg2));padding:18px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;z-index:2}
+  .drawer .dbody{padding:20px}
+  .x{border:1px solid var(--border2);background:var(--surface);color:var(--text);width:32px;height:32px;border-radius:9px;cursor:pointer;font-size:16px}
+  .kv{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+  .kv .cell{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px}
+  .kv .cell .k{font-size:10.5px;color:var(--muted);text-transform:uppercase}
+  .kv .cell .v{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:2px}
+
+  /* overlay */
+  #overlay{position:fixed;inset:0;background:var(--bg);display:grid;place-items:center;z-index:200;text-align:center;padding:24px}
+  #overlay .spin{width:42px;height:42px;border:4px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #overlay h2{font-family:var(--serif);font-weight:600;margin:0 0 6px}
+  #overlay .err{max-width:520px;color:var(--text2);font-size:13px}
+  #overlay code{background:var(--surface);padding:2px 6px;border-radius:6px;color:var(--accent2)}
+  footer{color:var(--muted);font-size:11.5px;text-align:center;margin-top:40px;line-height:1.7}
+  /* daily brief swipe deck */
+  .deckwrap{max-width:480px;margin:0 auto}
+  .deckhead{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
+  .stack{position:relative;height:524px}
+  @media(max-width:520px){.stack{height:72vh;min-height:480px}}
+  .swipe-card{position:absolute;inset:0;background:linear-gradient(180deg,var(--surface),var(--bg2));border:1px solid var(--border2);border-radius:20px;box-shadow:var(--shadow);padding:20px;display:flex;flex-direction:column;gap:13px;overflow-y:auto;touch-action:pan-y;user-select:none;-webkit-user-select:none;will-change:transform}
+  .swipe-card.top{cursor:grab}.swipe-card.top:active{cursor:grabbing}
+  .stamp{position:absolute;top:16px;font-size:20px;font-weight:900;letter-spacing:1.5px;padding:5px 13px;border-radius:10px;border:3px solid;opacity:0;pointer-events:none;z-index:5;background:var(--surface)}
+  .stamp.note{right:16px;color:var(--good);border-color:var(--good);transform:rotate(9deg)}
+  .stamp.skip{left:16px;color:var(--bad);border-color:var(--bad);transform:rotate(-9deg)}
+  .sc-head{display:flex;align-items:center;gap:11px}
+  .sc-head .ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;font-size:22px;flex:none}
+  .sc-tag{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:var(--muted)}
+  .sc-title{font-family:var(--serif);font-size:20px;font-weight:600;line-height:1.15;margin-top:2px}
+  .sc-verdict{margin-left:auto;font-size:10.5px;font-weight:800;padding:5px 10px;border-radius:20px;white-space:nowrap;flex:none}
+  .sc-line{font-size:13.5px;color:var(--text2);line-height:1.5}
+  .sc-big{font-family:var(--serif);font-size:26px;font-weight:700}
+  .sc-li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--border);font-size:13px}
+  .sc-li:last-child{border:0}.sc-li b{font-variant-numeric:tabular-nums}
+  .sc-rec{background:var(--bg2);border:1px dashed var(--border2);border-radius:10px;padding:9px 11px;font-size:12.5px;margin-top:auto}
+  .deck-controls{display:flex;justify-content:center;gap:16px;margin-top:16px}
+  .cbtn{width:56px;height:56px;border-radius:50%;border:1px solid var(--border2);background:var(--surface);font-size:22px;cursor:pointer;display:grid;place-items:center;transition:.15s;color:var(--text)}
+  .cbtn:hover{transform:scale(1.08);border-color:var(--accent)}
+  .cbtn.skip{color:var(--bad)}.cbtn.note{color:var(--good)}.cbtn.undo{width:44px;height:44px;font-size:16px;color:var(--text2)}
+  .progress{text-align:center;color:var(--muted);font-size:12px;margin-top:12px}
+  /* onboarding tour */
+  .tour{position:fixed;inset:0;background:rgba(6,4,2,.84);backdrop-filter:blur(6px);z-index:150;display:none;place-items:center;padding:24px}
+  .tour.show{display:grid}
+  .tour-card{max-width:470px;width:100%;background:linear-gradient(180deg,var(--surface),var(--bg2));border:1px solid var(--border2);border-radius:20px;padding:28px;box-shadow:var(--shadow);text-align:center;animation:fade .3s}
+  .tour-ic{font-size:44px;line-height:1}
+  .tour-card h3{font-family:var(--serif);font-weight:600;font-size:24px;margin:14px 0 8px}
+  .tour-card p{color:var(--text2);font-size:14px;line-height:1.6;margin:0 auto;max-width:390px}
+  .tour-dots{display:flex;gap:6px;justify-content:center;margin:22px 0 4px}
+  .tour-dots i{width:7px;height:7px;border-radius:50%;background:var(--border2);transition:.2s}
+  .tour-dots i.on{background:var(--accent);width:20px;border-radius:4px}
+  .tour-nav{display:flex;justify-content:space-between;align-items:center;margin-top:18px}
+  ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#4E392B;border-radius:6px}
+</style>
+</head>
+<body>
+<div id="overlay"><div><div class="spin"></div><h2>Lyzr $100M Mission Control</h2><div class="err" id="overlayMsg">Connecting to Supabase…</div></div></div>
+
+<header class="top">
+  <div class="top-inner">
+    <div class="brand"><span class="logo"><img src="data:image/png;base64,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" alt="Lyzr"></span><span>$100M Mission Control<small id="asof">Founder Decision Intelligence</small></span></div>
+    <nav class="tabs" id="tabs">
+      <button class="tab active" data-v="home">Mission Control</button>
+      <button class="tab" data-v="brief">Daily Brief</button>
+      <button class="tab" data-v="feed">Decision Feed</button>
+      <button class="tab" data-v="matrix">Growth × Productivity</button>
+      <button class="tab" data-v="depts">Department Intelligence</button>
+      <button class="tab" data-v="initiatives">Strategic Initiatives</button>
+    </nav>
+    <div class="top-right"><button class="btn sm" id="tourBtn">✨ Tour</button><span class="conn" id="conn"><span class="dot"></span>Connecting…</span></div>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- HOME -->
+  <section class="view active" id="view-home">
+    <div class="mission-hero" style="margin-top:20px">
+      <div class="mh-top">
+        <div>
+          <div class="mh-title">Are we on track for <em>$100M</em>?</div>
+          <div class="mh-sub" id="missionSub"></div>
+          <div class="mh-stats" id="missionStats"></div>
+          <div class="barcmp" id="missionBar"><i style="width:0"></i><div class="tick" style="left:100%"></div></div>
+          <div class="hint" style="margin-top:6px">Forecast vs. <b style="color:var(--text)">$100M</b> target · white tick = mission line</div>
+        </div>
+        <div class="gauge-wrap"><div id="probGauge"></div><div class="lab">Mission probability</div><button class="btn sm" style="margin-top:10px" onclick="go('brief')">Start today's brief →</button></div>
+      </div>
+    </div>
+
+    <div class="section-title"><h2>Simulate a decision</h2><p>Move a lever — win rate, ACV, pipeline, churn, capacity — and watch the forecast, gap and probability recompute live. Decide before you commit.</p></div>
+    <div class="card">
+      <div class="sim">
+        <div id="simControls"></div>
+        <div>
+          <div class="simout" id="simOut"></div>
+          <div style="display:flex;gap:8px;margin-top:12px"><button class="btn sm" id="simReset">↻ Reset to live baseline</button></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cols c-2-1" style="margin-top:14px">
+      <div class="card"><div class="card-head"><h3>Pipeline mathematics</h3></div><div class="csub">Reverse-engineered from the mission — updates with the simulation</div><div id="pipeMath"></div></div>
+      <div class="card"><h3>Revenue gap decomposition</h3><div class="csub">Where the baseline gap comes from</div><div id="gapDecomp"></div></div>
+    </div>
+
+    <div class="section-title"><h2>Business health</h2><p>Seven executive dimensions. One glance = where to look.</p></div>
+    <div class="health" id="healthRow"></div>
+
+    <div class="section-title"><h2>Revenue funnel, backwards</h2><p>Required (to hit $100M) vs. current vs. forecast at every stage. The shortfall is upstream — a pipeline-generation problem.</p></div>
+    <div class="card"><div id="funnel"></div></div>
+  </section>
+
+  <!-- DAILY BRIEF -->
+  <section class="view" id="view-brief">
+    <div class="section-title"><h2>Daily brief</h2><p>Your morning ritual — what's happening, top pipeline, top performers, alignment to the mission, and risks. Swipe right to add to today, left to skip.</p></div>
+    <div class="deckwrap">
+      <div class="deckhead"><span class="hint">Drag / swipe · ★ add to today · ✕ skip · ← → keys</span><button class="btn sm" onclick="restartBrief()">↻ Restart</button></div>
+      <div class="stack" id="stack"></div>
+      <div class="deck-controls">
+        <button class="cbtn undo" onclick="undoCard()" title="Undo">↩</button>
+        <button class="cbtn skip" onclick="decide('left')" title="Skip (←)">✕</button>
+        <button class="cbtn note" onclick="decide('right')" title="Add to today (→)">★</button>
+      </div>
+      <div class="progress" id="deckProgress"></div>
+      <div class="hint" style="text-align:center;margin-top:6px">Cards generated live from your Supabase data.</div>
+    </div>
+  </section>
+
+  <!-- FEED -->
+  <section class="view" id="view-feed">
+    <div class="section-title"><h2>Founder decision feed</h2><p>What happened · why it matters · what caused it · what it costs/creates · what to do. One minute, then act.</p></div>
+    <div class="feed" id="feedList"></div>
+  </section>
+
+  <!-- MATRIX -->
+  <section class="view" id="view-matrix">
+    <div class="section-title"><h2>Growth × Productivity matrix</h2><p>Every initiative placed by business impact (Y) and productivity (X). Bubble = resources deployed. Where is value created or destroyed?</p></div>
+    <div class="card"><div id="matrix"></div>
+      <div class="quad-legend"><span><b style="color:var(--good)">Double down</b> — high impact + high productivity</span><span><b style="color:var(--warn)">Fix</b> — high impact, low productivity</span><span><b style="color:var(--accent2)">Redeploy</b> — efficient but low strategic value</span><span><b style="color:var(--bad)">Stop</b> — low impact + low productivity</span></div>
+    </div>
+    <div class="section-title"><h2>Resource deployment</h2><p>Where the next dollar or person should go.</p></div>
+    <div class="card" style="padding:0;overflow-x:auto"><table id="resTable"></table></div>
+  </section>
+
+  <!-- DEPARTMENTS -->
+  <section class="view" id="view-depts">
+    <div class="section-title"><h2>Department intelligence</h2><p>Productivity vs. alignment for all 12 teams. A team can be productive and still work on the wrong things. Click to drill in.</p></div>
+    <div class="depts" id="deptGrid"></div>
+  </section>
+
+  <!-- INITIATIVES -->
+  <section class="view" id="view-initiatives">
+    <div class="section-title"><h2>Strategic initiatives</h2><p>The portfolio the company is actually funding — scored, and mapped to revenue.</p></div>
+    <div class="card" style="padding:0;overflow-x:auto"><table id="initTable"></table></div>
+    <div class="section-title"><h2>Did our decisions work?</h2><p>Decision effectiveness — before vs. target vs. actual, and the ROI of each call.</p></div>
+    <div class="cols c-1-1" id="decList"></div>
+  </section>
+
+  <footer>
+    Lyzr $100M Mission Control · data served live from Supabase (project <code style="color:inherit">Lyzr-Mission-Control</code>) · figures anchored on Lyzr's public numbers, per-record detail illustrative.<br>
+    Mission → Metrics → Relationships → Decisions → Outcomes.
+  </footer>
+</div>
+
+<div class="tour" id="tour"><div class="tour-card">
+  <div class="tour-ic" id="tourIc">🎯</div>
+  <h3 id="tourTitle"></h3>
+  <p id="tourBody"></p>
+  <div class="tour-dots" id="tourDots"></div>
+  <div class="tour-nav">
+    <button class="btn sm" id="tourSkip">Skip tour</button>
+    <div><button class="btn sm" id="tourBack" style="margin-right:6px">Back</button><button class="btn" id="tourNext">Next</button></div>
+  </div>
+</div></div>
+
+<div class="backdrop" id="backdrop" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer"><div class="dhd"><div id="drawerTitle"></div><button class="x" onclick="closeDrawer()">✕</button></div><div class="dbody" id="drawerBody"></div></aside>
+
+<script>
+/* ================= data layer ================= */
+const SB_URL="https://nphjqwlgoyoqjoflqadp.supabase.co";
+const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5waGpxd2xnb3lvcWpvZmxxYWRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1ODYwODksImV4cCI6MjEwMzE2MjA4OX0.xUNKsvG8O06nh-tfF_6uYQQrCr8g6jPNmGmOKyUrjZk";
+const TABLES={mission:"mission?select=*",funnel_stages:"funnel_stages?select=*&order=ord",health_scores:"health_scores?select=*&order=ord",gap_components:"gap_components?select=*&order=ord",aop_metrics:"aop_metrics?select=*",objectives:"objectives?select=*&order=ord",key_results:"key_results?select=*&order=ord",departments:"departments?select=*&order=ord",department_metrics:"department_metrics?select=*&order=ord",initiatives:"initiatives?select=*",accounts:"accounts?select=*",decision_feed:"decision_feed?select=*&order=ord",decisions:"decisions?select=*",resource_allocation:"resource_allocation?select=*&order=ord"};
+let DB={}, LIVE=true;
+async function loadAll(){
+  if(window.__SEED__){ LIVE=false; const s=JSON.parse(JSON.stringify(window.__SEED__)); s.mission=Array.isArray(s.mission)?s.mission[0]:s.mission; return s; }
+  const keys=Object.keys(TABLES);
+  const res=await Promise.all(keys.map(k=>fetch(`${SB_URL}/rest/v1/${TABLES[k]}`,{headers:{apikey:SB_KEY,Authorization:"Bearer "+SB_KEY}}).then(r=>{if(!r.ok)throw new Error(k+" → HTTP "+r.status);return r.json();})));
+  const db={}; keys.forEach((k,i)=>db[k]=res[i]); db.mission=db.mission[0]; return db;
+}
+
+/* ================= helpers ================= */
+const $=(s,e=document)=>e.querySelector(s), $$=(s,e=document)=>[...e.querySelectorAll(s)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const fmtM=v=> (Math.abs(v)>=1? "$"+(+v).toFixed(1)+"M" : "$"+Math.round(v*1000)+"K");
+const fmtM0=v=> "$"+Math.round(v)+"M";
+const scoreColor=s=> s>=80?"var(--good)":s>=65?"var(--warn)":"var(--bad)";
+const trArrow=t=> t==="up"?'<span class="up">▲</span>':t==="down"?'<span class="down">▼</span>':'<span style="color:var(--muted)">▬</span>';
+const quadClass={double_down:"p-dd",fix:"p-fix",redeploy:"p-re",stop:"p-stop"};
+const quadName={double_down:"Double down",fix:"Fix",redeploy:"Redeploy",stop:"Stop"};
+
+/* ================= SIMULATION ENGINE ================= */
+let SIM={}, BASE={};
+function initSim(){
+  const m=DB.mission;
+  BASE={arr:+m.current_arr_m,target:+m.target_arr_m,acvK:+m.avg_acv_k,winRate:+m.win_rate,pipeline:+m.current_pipeline_m,churn:+m.gross_churn,nrr:+m.nrr,capacity:+m.sales_capacity,deploy:0.87};
+  SIM={...BASE};
+}
+function computeSim(d){
+  const reqCust=Math.round(d.target*1000/d.acvK);
+  const reqPipe=d.target/d.winRate;
+  const pipeGap=Math.max(0,reqPipe-d.pipeline);
+  const retained=d.arr*(1-d.churn);
+  const expansion=d.arr*(d.nrr-1);
+  const newFromPipe=d.pipeline*d.winRate*(d.capacity/100)*d.deploy;
+  let forecast=retained+expansion+newFromPipe;
+  forecast=Math.min(forecast,d.target*1.15);
+  const gap=d.target-forecast;
+  const prob=Math.round(clamp(40+(forecast/d.target-0.6)*140,4,97));
+  return {reqCust,reqPipe,pipeGap,forecast,gap,prob,pipeAvail:d.pipeline};
+}
+
+/* ================= SVG ================= */
+function arcGauge(pct,size=118){
+  const r=size/2-10, cx=size/2, cy=size/2+8, C=Math.PI*r;
+  const col=pct>=70?"var(--good)":pct>=45?"var(--warn)":"var(--bad)";
+  const off=C*(1-pct/100);
+  return `<svg width="${size}" height="${size*0.66}" viewBox="0 0 ${size} ${size*0.66}">
+    <path d="M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}" fill="none" stroke="var(--bg2)" stroke-width="11" stroke-linecap="round"/>
+    <path d="M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}" fill="none" stroke="${col}" stroke-width="11" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}"/>
+    <text x="${cx}" y="${cy-4}" text-anchor="middle" font-family="var(--serif)" font-size="30" font-weight="700" fill="${col}">${pct}%</text></svg>`;
+}
+
+/* ================= RENDER: mission header + sim ================= */
+function renderMission(){
+  const o=computeSim(SIM);
+  $("#missionSub").innerHTML=`Current ARR <b class="tabnum" style="color:var(--text)">${fmtM(SIM.arr)}</b> · forecast toward the mission at today's levers`;
+  const gapColor=o.gap>0?"var(--bad)":"var(--good)";
+  $("#missionStats").innerHTML=`
+    <div class="mh-stat"><div class="k">Current ARR</div><div class="v">${fmtM(SIM.arr)}</div><div class="d">today</div></div>
+    <div class="mh-stat"><div class="k">Forecast ARR</div><div class="v" style="color:var(--accent2)">${fmtM(o.forecast)}</div><div class="d">at current levers</div></div>
+    <div class="mh-stat"><div class="k">Revenue gap</div><div class="v" style="color:${gapColor}">${o.gap>0?'🔴 ':'🟢 '}${fmtM(Math.abs(o.gap))}</div><div class="d">to $100M</div></div>`;
+  $("#missionBar>i").style.width=clamp(o.forecast/SIM.target*100,2,100)+"%";
+  $("#probGauge").innerHTML=arcGauge(o.prob);
+  renderPipe(o); renderSimOut(o);
+}
+const SLIDERS=[
+  {k:"winRate",label:"Enterprise win rate",min:0.10,max:0.45,step:0.01,fmt:v=>Math.round(v*100)+"%"},
+  {k:"acvK",label:"Average ACV",min:200,max:800,step:10,fmt:v=>"$"+v+"K"},
+  {k:"pipeline",label:"Qualified pipeline",min:150,max:520,step:5,fmt:v=>"$"+v+"M"},
+  {k:"churn",label:"Gross churn",min:0.02,max:0.16,step:0.005,fmt:v=>(v*100).toFixed(1)+"%"},
+  {k:"nrr",label:"Net revenue retention",min:1.0,max:1.45,step:0.01,fmt:v=>Math.round(v*100)+"%"},
+  {k:"capacity",label:"Sales capacity index",min:60,max:170,step:5,fmt:v=>v},
+  {k:"deploy",label:"Deployment execution",min:0.6,max:1.0,step:0.01,fmt:v=>Math.round(v*100)+"%"},
+];
+function renderSimControls(){
+  $("#simControls").innerHTML=SLIDERS.map(s=>`<div class="slider"><label>${s.label} <b id="lab_${s.k}">${s.fmt(SIM[s.k])}</b></label>
+    <input type="range" id="sl_${s.k}" min="${s.min}" max="${s.max}" step="${s.step}" value="${SIM[s.k]}"></div>`).join("");
+  SLIDERS.forEach(s=>{ const el=$("#sl_"+s.k); el.addEventListener("input",()=>{ SIM[s.k]=+el.value; $("#lab_"+s.k).textContent=s.fmt(+el.value); renderMission(); }); });
+}
+function renderSimOut(o){
+  const b=computeSim(BASE);
+  const cell=(k,v,base,fmt,invert)=>{ const dl=v-base; const good=invert?dl<0:dl>0; const arrow=Math.abs(dl)<0.001?"":(dl>0?"▲":"▼");
+    return `<div class="simcell"><div class="k">${k}</div><div class="v">${fmt(v)}</div>${arrow?`<div class="delta ${good?'up':'down'}">${arrow} ${fmt(Math.abs(dl))} vs baseline</div>`:'<div class="delta" style="color:var(--muted)">baseline</div>'}</div>`; };
+  $("#simOut").innerHTML=
+    cell("Forecast ARR",o.forecast,b.forecast,v=>fmtM(v),false)+
+    cell("Revenue gap",o.gap,b.gap,v=>fmtM(v),true)+
+    cell("Mission probability",o.prob,b.prob,v=>Math.round(v)+"%",false)+
+    cell("Required customers",o.reqCust,b.reqCust,v=>Math.round(v),true)+
+    cell("Required pipeline",o.reqPipe,b.reqPipe,v=>fmtM0(v),true)+
+    cell("Pipeline gap",o.pipeGap,b.pipeGap,v=>fmtM0(v),true);
+}
+function renderPipe(o){
+  const rows=[
+    ["Required customers ($"+SIM.acvK+"K each)",Math.round(o.reqCust),"customers"],
+    ["Required qualified pipeline",fmtM0(o.reqPipe),"at "+Math.round(SIM.winRate*100)+"% win rate"],
+    ["Pipeline available",fmtM0(o.pipeAvail),"projected"],
+    ["Pipeline gap",fmtM0(o.pipeGap),o.pipeGap>0?"🔴 generation problem":"🟢 covered"],
+  ];
+  $("#pipeMath").innerHTML=rows.map(r=>`<div class="gaprow"><div class="nm">${r[0]}</div><div class="amt" style="width:auto;flex:1;text-align:right;font-family:var(--serif);font-size:17px">${r[1]}</div></div><div class="hint" style="margin:-4px 0 6px;text-align:right">${r[2]}</div>`).join("");
+}
+$("#simReset")?.addEventListener?.("click",()=>{});
+
+/* ================= gap / health / funnel ================= */
+function renderGap(){
+  const g=DB.gap_components, mx=Math.max(...g.map(x=>+x.amount_m)), tot=g.reduce((a,b)=>a+ +b.amount_m,0);
+  $("#gapDecomp").innerHTML=`<div style="font-family:var(--serif);font-size:20px;margin-bottom:8px">🔴 ${fmtM(tot)} baseline gap</div>`+
+    g.map(x=>`<div class="gaprow"><div class="nm">${x.label}</div><div class="tr"><i style="width:${(+x.amount_m/mx*100)}%"></i></div><div class="amt">${fmtM(+x.amount_m)}</div></div>`).join("");
+}
+function renderHealth(){
+  $("#healthRow").innerHTML=DB.health_scores.map(h=>`<div class="hchip"><div class="l">${h.label}</div><div class="s" style="color:${scoreColor(h.score)}">${h.score}<span>${trArrow(h.trend)}</span></div></div>`).join("");
+}
+function renderFunnel(){
+  const f=DB.funnel_stages.slice().sort((a,b)=>a.ord-b.ord);
+  // required (backwards) from won target using conv_to_next
+  const wonReq=Math.round(SIM.target*1000/SIM.acvK);
+  const req={}; req[f[f.length-1].id]=wonReq;
+  for(let i=f.length-2;i>=0;i--){ const c=+f[i].conv_to_next||0.3; req[f[i].id]=Math.round(req[f[i+1].id]/c); }
+  const maxReq=Math.max(...f.map(s=>req[s.id]));
+  const w=v=> clamp(v/maxReq*100,1.5,100);
+  $("#funnel").innerHTML=f.map(s=>`<div class="fstage">
+    <div class="fl">${s.label}<small>${s.note||s.unit}</small></div>
+    <div class="fbars">
+      <div class="fbar"><i style="width:${w(req[s.id])}%;background:var(--muted)"></i></div>
+      <div class="fbar"><i style="width:${w(+s.current_vol)}%;background:var(--accent)"></i></div>
+    </div>
+    <div class="fv">req <b>${req[s.id].toLocaleString()}</b> · now <b style="color:${(+s.current_vol)>=req[s.id]?'var(--good)':'var(--bad)'}">${(+s.current_vol).toLocaleString()}</b></div>
+  </div>`).join("")+`<div class="hint" style="margin-top:8px"><span style="color:var(--muted)">grey = required for $100M</span> · <span style="color:var(--accent)">orange = current</span></div>`;
+}
+
+/* ================= feed ================= */
+const sevIcon={critical:"🔴",opportunity:"🟢",watch:"🟠",blindspot:"⚠️"};
+const feedState={};
+function renderFeed(){
+  $("#feedList").innerHTML=DB.decision_feed.map(f=>{
+    const st=feedState[f.id];
+    return `<div class="fitem sev-${f.severity}">
+      <div class="fh"><span style="font-size:16px">${sevIcon[f.severity]}</span><span class="ft">${f.title}</span>
+        ${+f.dollar_impact_m?`<span class="fdollar" style="color:${f.severity==='opportunity'?'var(--good)':'var(--bad)'}">${fmtM(+f.dollar_impact_m)}</span>`:''}
+        <span class="tag">${f.kind}</span></div>
+      <div class="qa">
+        <div class="q">What happened</div><div class="a">${f.what_happened||''}</div>
+        <div class="q">Why it matters</div><div class="a">${f.why_matters||''}</div>
+        <div class="q">Root cause</div><div class="a">${f.root_cause||''}</div>
+      </div>
+      <div class="frec">▸ <b>Do:</b> ${f.recommendation}${f.proposed_initiative?` <span class="tag" style="margin-left:6px">→ ${f.proposed_initiative}</span>`:''}</div>
+      ${st?`<div class="fdone">✓ ${st}</div>`:`<div class="factions">
+        <button class="btn sm" onclick="feedAct(${f.id},'Ignored')">Ignore</button>
+        <button class="btn sm" onclick="feedAct(${f.id},'Investigating')">Investigate</button>
+        <button class="btn sm" onclick="feedAct(${f.id},'Saved for review')">Save</button>
+        <button class="btn sm" style="border-color:var(--accent);color:var(--accent2)" onclick="feedAct(${f.id},'Initiative created')">Create Initiative</button>
+      </div>`}
+    </div>`;
+  }).join("");
+}
+function feedAct(id,label){ feedState[id]=label; renderFeed(); }
+
+/* ================= matrix ================= */
+function renderMatrix(){
+  const el=$("#matrix"), W=el.clientWidth||820, H=440, pad={l:54,r:20,t:20,b:44};
+  const iw=W-pad.l-pad.r, ih=H-pad.t-pad.b;
+  const X=v=>pad.l+v/100*iw, Y=v=>pad.t+ih-v/100*ih;
+  const qcol={double_down:"#48CFA1",fix:"#F0AD46",redeploy:"#E9A46A",stop:"#F0685C"};
+  let g=`<svg width="100%" viewBox="0 0 ${W} ${H}" font-family="var(--sans)">`;
+  g+=`<rect x="${X(50)}" y="${pad.t}" width="${iw/2}" height="${ih/2}" fill="rgba(72,207,161,.05)"/>`;
+  g+=`<rect x="${pad.l}" y="${pad.t}" width="${iw/2}" height="${ih/2}" fill="rgba(240,173,70,.05)"/>`;
+  g+=`<rect x="${pad.l}" y="${Y(50)}" width="${iw/2}" height="${ih/2}" fill="rgba(240,104,92,.05)"/>`;
+  g+=`<line x1="${X(50)}" y1="${pad.t}" x2="${X(50)}" y2="${pad.t+ih}" stroke="var(--border2)" stroke-dasharray="4 4"/>`;
+  g+=`<line x1="${pad.l}" y1="${Y(50)}" x2="${pad.l+iw}" y2="${Y(50)}" stroke="var(--border2)" stroke-dasharray="4 4"/>`;
+  const corner=(x,y,t,c,anchor)=>`<text x="${x}" y="${y}" fill="${c}" font-size="11" font-weight="700" text-anchor="${anchor}" opacity=".8">${t}</text>`;
+  g+=corner(X(96),pad.t+16,"DOUBLE DOWN","#48CFA1","end")+corner(pad.l+6,pad.t+16,"FIX","#F0AD46","start")+corner(pad.l+6,pad.t+ih-8,"STOP","#F0685C","start")+corner(X(96),pad.t+ih-8,"REDEPLOY","#E9A46A","end");
+  g+=`<text x="${pad.l+iw/2}" y="${H-8}" text-anchor="middle" fill="var(--muted)" font-size="11">Productivity →</text>`;
+  g+=`<text x="16" y="${pad.t+ih/2}" text-anchor="middle" fill="var(--muted)" font-size="11" transform="rotate(-90 16 ${pad.t+ih/2})">Business impact →</text>`;
+  DB.initiatives.forEach(it=>{ const r=6+Math.sqrt(+it.cost_k)/4.5; const c=qcol[it.quadrant]||"#999";
+    g+=`<circle cx="${X(it.productivity)}" cy="${Y(it.business_impact)}" r="${r}" fill="${c}" opacity=".68" stroke="#1A100B"><title>${it.name} · impact ${it.business_impact} · productivity ${it.productivity} · $${it.cost_k}K → ${fmtM(+it.exp_revenue_m)}</title></circle>`; });
+  g+=`</svg>`; el.innerHTML=g;
+  // resource table
+  const r=DB.resource_allocation;
+  $("#resTable").innerHTML=`<thead><tr><th>Area</th><th class="num">People</th><th class="num">Cost</th><th class="num">Strategic capacity</th><th>Impact</th><th class="num">Productivity</th><th>Decision</th></tr></thead><tbody>`+
+    r.map(x=>`<tr><td><b>${x.area}</b></td><td class="num">${x.people}</td><td class="num">${fmtM(+x.cost_m)}</td><td class="num">${Math.round(x.strategic_capacity*100)}%</td><td>${x.impact_label}</td><td class="num" style="color:${scoreColor(x.productivity)}">${x.productivity}</td><td><b style="color:${x.decision==='Stop'?'var(--bad)':x.decision==='Reassess'?'var(--warn)':'var(--good)'}">${x.decision}</b></td></tr>`).join("")+`</tbody>`;
+}
+
+/* ================= departments ================= */
+function renderDepts(){
+  $("#deptGrid").innerHTML=DB.departments.map(d=>`<div class="card dcard" onclick="openDept('${d.id}')">
+    <div class="dh"><span class="ic" style="background:${d.color}22">${d.icon}</span><span class="nm">${d.name}</span></div>
+    <div class="hint" style="min-height:32px">${d.mission_contribution}</div>
+    <div class="twoscore">
+      <div class="sc"><div class="k">Productivity</div><div class="v" style="color:${scoreColor(d.productivity)}">${d.productivity}</div></div>
+      <div class="sc"><div class="k">Alignment</div><div class="v" style="color:${scoreColor(d.alignment)}">${d.alignment}</div></div>
+    </div>
+    <div class="mini"><i style="width:${d.strategic_capacity*100}%;background:${d.strategic_capacity>=0.75?'var(--good)':d.strategic_capacity>=0.6?'var(--warn)':'var(--bad)'}"></i></div>
+    <div class="hint" style="margin-top:5px">Strategic capacity ${Math.round(d.strategic_capacity*100)}% · influences ${fmtM(+d.revenue_impact_m)} ARR</div>
+  </div>`).join("");
+}
+function openDept(id){
+  const d=DB.departments.find(x=>x.id===id);
+  const mets=DB.department_metrics.filter(m=>m.department_id===id).sort((a,b)=>a.ord-b.ord);
+  const inits=DB.initiatives.filter(i=>i.department_id===id);
+  $("#drawerTitle").innerHTML=`<div style="display:flex;align-items:center;gap:10px"><span style="font-size:22px">${d.icon}</span><div><div style="font-weight:800;font-size:16px">${d.name}</div><div class="hint">${d.mission_contribution}</div></div></div>`;
+  const achieve=m=> Math.round((m.lower_better? m.target/m.value : m.value/m.target)*100);
+  $("#drawerBody").innerHTML=`
+    <div class="kv">
+      <div class="cell"><div class="k">Productivity</div><div class="v" style="color:${scoreColor(d.productivity)}">${d.productivity}</div></div>
+      <div class="cell"><div class="k">Alignment</div><div class="v" style="color:${scoreColor(d.alignment)}">${d.alignment}</div></div>
+      <div class="cell"><div class="k">Strategic capacity</div><div class="v">${Math.round(d.strategic_capacity*100)}%</div></div>
+      <div class="cell"><div class="k">ARR influenced</div><div class="v">${fmtM(+d.revenue_impact_m)}</div></div>
+      <div class="cell"><div class="k">Headcount</div><div class="v">${d.headcount} <span class="hint">+${d.open_reqs} open</span></div></div>
+      <div class="cell"><div class="k">Annual cost</div><div class="v">${fmtM(+d.cost_m)}</div></div>
+    </div>
+    <h3 style="margin:16px 0 4px;font-size:13px">KPIs vs target</h3>
+    <table><tbody>${mets.map(m=>{const a=achieve(m);return `<tr><td>${m.name}</td><td class="num"><b>${m.value}${m.unit}</b></td><td class="num" style="color:var(--muted)">tgt ${m.target}${m.unit}</td><td class="num" style="color:${scoreColor(a)}">${a}%</td></tr>`;}).join("")}</tbody></table>
+    ${inits.length?`<h3 style="margin:16px 0 4px;font-size:13px">Initiatives</h3>${inits.map(i=>`<div class="frec" style="margin-top:6px">${i.name} · <span class="pill ${quadClass[i.quadrant]}">${quadName[i.quadrant]}</span> · score ${i.priority_score} · ${fmtM(+i.exp_revenue_m)} upside</div>`).join("")}`:''}
+    <div class="frec" style="margin-top:16px"><b>Mission link:</b> ${d.mission_contribution}. Productivity ${d.productivity} vs alignment ${d.alignment} — ${d.alignment<d.productivity-10?'productive but drifting from the $100M priorities.':'well-aligned to the mission.'}</div>`;
+  $("#drawer").classList.add("show"); $("#backdrop").classList.add("show");
+}
+function closeDrawer(){ $("#drawer").classList.remove("show"); $("#backdrop").classList.remove("show"); }
+
+/* ================= initiatives + decisions ================= */
+function renderInitiatives(){
+  const rows=DB.initiatives.slice().sort((a,b)=>b.priority_score-a.priority_score);
+  $("#initTable").innerHTML=`<thead><tr><th>Initiative</th><th>Owner</th><th class="num">Cost</th><th class="num">Upside</th><th class="num">Conf.</th><th class="num">TTI</th><th>Quadrant</th><th class="num">Score</th><th>Do</th></tr></thead><tbody>`+
+    rows.map(i=>`<tr><td><b>${i.name}</b><div class="hint">${i.aop_link?'AOP · '+i.aop_link:''}</div></td><td>${i.owner}</td><td class="num">$${i.cost_k}K</td><td class="num">${fmtM(+i.exp_revenue_m)}</td><td class="num">${Math.round(i.confidence*100)}%</td><td class="num">${i.time_to_impact_days}d</td><td><span class="pill ${quadClass[i.quadrant]}">${quadName[i.quadrant]}</span></td><td class="num"><b style="color:${scoreColor(i.priority_score)}">${i.priority_score}</b></td><td><b style="color:${i.recommendation==='Stop'||i.recommendation==='Reduce'||i.recommendation==='Reassess'?'var(--bad)':'var(--good)'}">${i.recommendation}</b></td></tr>`).join("")+`</tbody>`;
+  $("#decList").innerHTML=DB.decisions.map(d=>{
+    const a=d.actual_val, hitColor=d.status==='working'?'var(--good)':d.status==='failed'?'var(--bad)':'var(--warn)';
+    return `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h3>${d.title}</h3><span class="pill" style="background:${hitColor}22;color:${hitColor}">${d.status}</span></div>
+      <div class="csub">${d.hypothesis}</div>
+      <div class="kv" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="cell"><div class="k">Before</div><div class="v">${d.before_val}${d.unit}</div></div>
+        <div class="cell"><div class="k">Target</div><div class="v">${d.target_val}${d.unit}</div></div>
+        <div class="cell"><div class="k">Actual</div><div class="v" style="color:${hitColor}">${d.actual_val}${d.unit}</div></div>
+      </div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px">
+        <span class="hint">Incremental ARR <b style="color:var(--good)">${fmtM(+d.incremental_arr_m)}</b></span>
+        <span class="hint">Investment <b style="color:var(--text)">$${d.investment_k}K</b></span>
+        <span class="hint">Decision ROI <b style="color:var(--accent2);font-family:var(--serif);font-size:15px">${d.roi}×</b></span>
+      </div></div>`;
+  }).join("");
+}
+
+/* ================= DAILY BRIEF (swipe deck from Supabase) ================= */
+const fmtK=v=> +v>=1000? "$"+(+v/1000).toFixed(1)+"M" : "$"+Math.round(+v)+"K";
+function buildBrief(){
+  const o=computeSim(SIM), cards=[];
+  cards.push({id:'mission',ic:'🎯',tag:'Mission',color:'#DE7A45',title:`$100M mission — ${o.prob}% probability`,
+    verdict:o.prob>=70?'On track':'Attention', vgood:o.prob>=70,
+    lines:[`Forecast <b>${fmtM(o.forecast)}</b> against the $100M target.`,`Revenue gap <b>${fmtM(o.gap)}</b> · pipeline gap <b>${fmtM0(o.pipeGap)}</b>.`],
+    rec:o.prob>=70?'Hold course — protect the levers driving the forecast.':'The gap is mostly pipeline generation — fund it first.'});
+  DB.decision_feed.filter(f=>f.severity==='critical'||f.severity==='opportunity').slice(0,3).forEach(f=>cards.push({
+    id:'sig'+f.id,ic:sevIcon[f.severity],tag:f.kind,color:f.severity==='opportunity'?'#48CFA1':'#F0685C',
+    title:f.title, big:+f.dollar_impact_m?fmtM(+f.dollar_impact_m):null, bigColor:f.severity==='opportunity'?'var(--good)':'var(--bad)',
+    lines:[f.why_matters], rec:f.recommendation+(f.proposed_initiative?` → ${f.proposed_initiative}`:'')}));
+  const pipe=DB.accounts.filter(a=>+a.churn_risk<40).sort((a,b)=>b.expansion_potential-a.expansion_potential).slice(0,5);
+  cards.push({id:'pipe',ic:'📈',tag:'Top pipeline',color:'#4CB7A4',title:'Biggest expansion opportunities',
+    items:pipe.map(a=>[`${a.name} <span class="hint">${a.vertical}</span>`,`${fmtK(a.arr_k)} · exp ${a.expansion_potential}`]),
+    rec:'Expansion is the cheapest path to $100M — line up QBRs this week.'});
+  const perf=DB.departments.slice().sort((a,b)=>b.productivity-a.productivity).slice(0,5);
+  cards.push({id:'perf',ic:'🏅',tag:'Top performers',color:'#F0AD46',title:'Highest-performing teams',
+    items:perf.map(d=>[`${d.icon} ${d.name}`,`prod ${d.productivity} · align ${d.alignment}`]),
+    rec:'Protect and clone what these teams are doing right.'});
+  const mis=DB.departments.filter(d=>d.productivity-d.alignment>=12).sort((a,b)=>(b.productivity-b.alignment)-(a.productivity-a.alignment)).slice(0,4);
+  if(mis.length) cards.push({id:'align',ic:'🧭',tag:'Alignment',color:'#E9A46A',title:'Productive — but aligned to the mission?',
+    items:mis.map(d=>[`${d.icon} ${d.name}`,`prod ${d.productivity} vs align ${d.alignment}`]),
+    rec:'High output, low alignment — redirect this capacity to $100M priorities.'});
+  const risk=DB.accounts.filter(a=>+a.churn_risk>=55).sort((a,b)=>b.churn_risk-a.churn_risk).slice(0,5);
+  const rArr=risk.reduce((s,a)=>s+ +a.arr_k,0);
+  cards.push({id:'risk',ic:'🔻',tag:'Churn risk',color:'#F0685C',title:`${fmtK(rArr)} ARR at risk`, verdict:'Act', vgood:false,
+    items:risk.map(a=>[`${a.name} <span class="hint">${a.vertical}</span>`,`risk ${a.churn_risk} · ${fmtK(a.arr_k)}`]),
+    rec:'Launch a retention sprint on the highest-ARR, highest-risk accounts.'});
+  DB.initiatives.filter(i=>i.recommendation==='Act now').sort((a,b)=>b.priority_score-a.priority_score).slice(0,2).forEach(i=>cards.push({
+    id:'init'+i.id,ic:'⚡',tag:'Initiative',color:'#48CFA1',title:i.name, big:fmtM(+i.exp_revenue_m), bigColor:'var(--good)',
+    lines:[`Priority score <b>${i.priority_score}</b> · ${Math.round(i.confidence*100)}% confidence · ${i.time_to_impact_days}-day impact.`],
+    rec:'Approve to add to today — highest-scored open initiative.'}));
+  return cards;
+}
+let DECK=[], deckPos=0, hist=[], noted={};
+function cardHTML(c,depth){
+  const topCls=depth===0?' top':'';
+  const st=depth>0?`style="transform:translateY(${depth*14}px) scale(${(1-depth*0.045).toFixed(3)});opacity:${1-depth*0.16};pointer-events:none"`:'';
+  const body = (c.lines?c.lines.map(l=>`<div class="sc-line">${l}</div>`).join(''):'')
+    + (c.big?`<div class="sc-big" style="color:${c.bigColor||'var(--text)'}">${c.big}</div>`:'')
+    + (c.items?`<div>${c.items.map(it=>`<div class="sc-li"><span>${it[0]}</span><b>${it[1]}</b></div>`).join('')}</div>`:'');
+  return `<div class="swipe-card${topCls}" data-id="${c.id}" ${st}>
+    <div class="stamp skip">SKIP</div><div class="stamp note">★ TODAY</div>
+    <div class="sc-head"><span class="ic" style="background:${c.color}22">${c.ic}</span>
+      <div><div class="sc-tag">${c.tag}</div><div class="sc-title">${c.title}</div></div>
+      ${c.verdict?`<span class="sc-verdict" style="background:${c.vgood?'rgba(72,207,161,.16)':'rgba(240,104,92,.16)'};color:${c.vgood?'var(--good)':'var(--bad)'}">${c.verdict}</span>`:''}</div>
+    ${body}
+    <div class="sc-rec">▸ ${c.rec}</div></div>`;
+}
+function renderDeck(){
+  const wrap=$("#stack"); if(!wrap) return;
+  if(!DECK.length) DECK=buildBrief();
+  if(deckPos>=DECK.length){ return renderBriefSummary(); }
+  let h=""; for(let i=Math.min(DECK.length-1,deckPos+2);i>=deckPos;i--) h+=cardHTML(DECK[i],i-deckPos);
+  wrap.innerHTML=h;
+  const top=wrap.querySelector(".swipe-card.top"); if(top) attachDrag(top);
+  updateDeckProgress();
+}
+function updateDeckProgress(done){ const p=$("#deckProgress"); if(!p)return; const n=Object.keys(noted).length;
+  p.innerHTML=done?`Done · <b style="color:var(--good)">${n} on today's list</b>`:`${Math.min(deckPos+1,DECK.length)} / ${DECK.length} · <b style="color:var(--good)">${n} added</b>`; }
+function attachDrag(card){
+  let sx=0,sy=0,dx=0,dy=0,drag=false,axis=null;
+  const note=card.querySelector(".stamp.note"), skip=card.querySelector(".stamp.skip");
+  card.addEventListener("pointerdown",e=>{drag=true;axis=null;sx=e.clientX;sy=e.clientY;card.style.transition="none";});
+  card.addEventListener("pointermove",e=>{ if(!drag)return; dx=e.clientX-sx;dy=e.clientY-sy;
+    if(axis===null&&(Math.abs(dx)>7||Math.abs(dy)>7)) axis=Math.abs(dx)>Math.abs(dy)?"x":"y";
+    if(axis!=="x")return; e.preventDefault(); try{card.setPointerCapture(e.pointerId);}catch(_){}
+    card.style.transform=`translate(${dx}px,${dy*0.25}px) rotate(${dx/22}deg)`;
+    if(note)note.style.opacity=clamp(dx/110,0,1); if(skip)skip.style.opacity=clamp(-dx/110,0,1); });
+  const end=()=>{ if(!drag)return; drag=false;
+    if(axis==="x"&&dx>110)return decide("right"); if(axis==="x"&&dx<-110)return decide("left");
+    card.style.transition="transform .25s ease"; card.style.transform=""; if(note)note.style.opacity=0; if(skip)skip.style.opacity=0; };
+  card.addEventListener("pointerup",end); card.addEventListener("pointercancel",end);
+}
+function decide(dir){
+  const wrap=$("#stack"), card=wrap&&wrap.querySelector(".swipe-card.top"); if(!card)return;
+  const c=DECK[deckPos]; if(dir==="right"){ noted[c.id]=c; }
+  hist.push({pos:deckPos,dir,id:c.id});
+  const off=dir==="right"?(window.innerWidth||800):-(window.innerWidth||800);
+  card.style.transition="transform .34s ease, opacity .34s ease";
+  card.style.transform=`translate(${off}px,60px) rotate(${dir==="right"?16:-16}deg)`; card.style.opacity="0";
+  deckPos++; setTimeout(renderDeck,200);
+}
+function undoCard(){ if(!hist.length)return; const last=hist.pop(); deckPos=last.pos; if(last.dir==="right")delete noted[last.id]; renderDeck(); }
+function restartBrief(){ DECK=buildBrief(); deckPos=0; hist=[]; noted={}; renderDeck(); }
+function renderBriefSummary(){
+  const items=Object.values(noted);
+  $("#stack").innerHTML=`<div class="swipe-card top" style="justify-content:center;text-align:center">
+    <div style="margin:auto 0"><div style="font-size:44px">✅</div>
+      <h3 style="font-family:var(--serif);font-weight:600;font-size:23px;margin:10px 0 4px">You're ready for the day</h3>
+      <p class="hint">${items.length} item${items.length===1?'':'s'} on today's list.</p>
+      ${items.length?`<div style="text-align:left;margin-top:14px">${items.map(c=>`<div class="sc-li"><span>${c.ic} ${c.title}</span><b style="color:var(--good)">✓</b></div>`).join("")}</div>`:'<p class="hint" style="margin-top:10px">Nothing flagged. Swipe right on anything worth your attention.</p>'}
+      <button class="btn" style="margin-top:20px" onclick="restartBrief()">↻ Replay brief</button></div></div>`;
+  updateDeckProgress(true);
+}
+
+/* ================= ONBOARDING TOUR ================= */
+const TOUR=[
+  {ic:'🎯',t:'Welcome to Mission Control',b:'This isn\'t a metrics dashboard — it\'s a decision system. One question drives everything: <b>are we on track for $100M</b>, and if not, what should you do about it today?'},
+  {ic:'🧮',t:'Simulate before you commit',b:'On the home screen, move a lever — win rate, ACV, pipeline, churn, capacity — and watch the <b>forecast, revenue gap and mission probability recompute live</b>. Test a decision before you make it.'},
+  {ic:'🗞️',t:'Your daily brief',b:'The <b>Daily Brief</b> is your morning ritual: what\'s happening, top pipeline, top performers, alignment and risks — as <b>Bumble-style swipe cards</b>. Swipe right to add to today, left to skip.'},
+  {ic:'🧭',t:'From signal to decision',b:'The <b>Decision Feed</b> turns every signal into a call — what happened, why it matters, the $ impact, and the recommended move. The <b>Growth × Productivity</b> matrix shows where to double-down vs. stop.'},
+  {ic:'🏢',t:'Drill all the way down',b:'<b>Department Intelligence</b> separates productivity from alignment; <b>Strategic Initiatives</b> scores the portfolio and tracks whether past decisions actually worked. All data is live from Supabase.'},
+];
+let tourStep=0;
+function showTour(){ tourStep=0; renderTour(); $("#tour").classList.add("show"); }
+function renderTour(){
+  const s=TOUR[tourStep];
+  $("#tourIc").textContent=s.ic; $("#tourTitle").textContent=s.t; $("#tourBody").innerHTML=s.b;
+  $("#tourDots").innerHTML=TOUR.map((_,i)=>`<i class="${i===tourStep?'on':''}"></i>`).join("");
+  $("#tourBack").style.visibility=tourStep===0?'hidden':'visible';
+  $("#tourNext").textContent=tourStep===TOUR.length-1?'Start →':'Next';
+}
+function endTour(){ $("#tour").classList.remove("show"); try{localStorage.setItem("lyzr_mc_tour","done");}catch(e){} }
+$("#tourNext").addEventListener("click",()=>{ if(tourStep<TOUR.length-1){tourStep++;renderTour();} else endTour(); });
+$("#tourBack").addEventListener("click",()=>{ if(tourStep>0){tourStep--;renderTour();} });
+$("#tourSkip").addEventListener("click",endTour);
+$("#tourBtn").addEventListener("click",showTour);
+
+/* ================= nav + boot ================= */
+function go(v){ $$(".tab").forEach(t=>t.classList.toggle("active",t.dataset.v===v)); $$(".view").forEach(s=>s.classList.toggle("active",s.id==="view-"+v));
+  if(v==='matrix') renderMatrix(); if(v==='brief') renderDeck(); window.scrollTo({top:0,behavior:"smooth"}); }
+$("#tabs").addEventListener("click",e=>{const b=e.target.closest(".tab"); if(b) go(b.dataset.v);});
+document.getElementById("simReset").addEventListener("click",()=>{ SIM={...BASE}; renderSimControls(); renderMission(); renderFunnel(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeDrawer(); if($("#tour").classList.contains("show")) endTour(); }
+  if($("#view-brief")?.classList.contains("active") && !$("#tour").classList.contains("show")){ if(e.key==="ArrowRight")decide("right"); else if(e.key==="ArrowLeft")decide("left"); } });
+window.addEventListener("resize",()=>{ if($("#view-matrix").classList.contains("active")) renderMatrix(); });
+
+function renderAll(){ renderSimControls(); renderMission(); renderGap(); renderHealth(); renderFunnel(); DECK=buildBrief(); renderDeck(); renderFeed(); renderDepts(); renderInitiatives(); }
+function boot(){
+  loadAll().then(db=>{
+    DB=db; initSim(); renderAll();
+    $("#overlay").style.display="none";
+    $("#conn").innerHTML=`<span class="dot"></span>${LIVE?'Live · Supabase':'Preview data'}`;
+    try{ if(localStorage.getItem("lyzr_mc_tour")!=="done") showTour(); }catch(e){ showTour(); }
+  }).catch(err=>{
+    $("#overlay .spin").style.display="none";
+    $("#overlayMsg").innerHTML=`<b style="color:var(--bad)">Couldn't reach Supabase.</b><br>${err.message}<br><br>This build reads live from the <code>Lyzr-Mission-Control</code> project. Check the project is active and the anon key is valid, then <button class="btn sm" onclick="location.reload()">retry</button>.`;
+    $("#conn").innerHTML=`<span class="dot err"></span>Offline`;
+  });
+}
+boot();
+</script>
+</body>
+</html>
