@@ -199,6 +199,16 @@
   .cbtn:hover{transform:scale(1.08);border-color:var(--accent)}
   .cbtn.skip{color:var(--bad)}.cbtn.note{color:var(--good)}.cbtn.undo{width:44px;height:44px;font-size:16px;color:var(--text2)}
   .progress{text-align:center;color:var(--muted);font-size:12px;margin-top:12px}
+  /* news popup (first-run morning brief) */
+  .newspop{position:fixed;inset:0;z-index:160;background:radial-gradient(1000px 700px at 80% -10%,#3A2214 0%,transparent 55%),var(--bg);display:none;flex-direction:column;align-items:center;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}
+  .newspop.show{display:flex}
+  .np-head{width:100%;max-width:480px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:12px}
+  .np-title{font-family:var(--serif);font-size:22px;font-weight:600;line-height:1.1}
+  .np-sub{color:var(--text2);font-size:12px;margin-top:2px}
+  .np-actions{display:flex;gap:8px;flex:none}
+  .newspop{justify-content:center}
+  .newspop .stack{width:100%;max-width:480px;flex:none;height:min(560px,70vh)}
+  .newspop .deck-controls,.newspop .progress{width:100%;max-width:480px}
   /* onboarding tour */
   .tour{position:fixed;inset:0;background:rgba(6,4,2,.84);backdrop-filter:blur(6px);z-index:150;display:none;place-items:center;padding:24px}
   .tour.show{display:grid}
@@ -210,6 +220,23 @@
   .tour-dots i{width:7px;height:7px;border-radius:50%;background:var(--border2);transition:.2s}
   .tour-dots i.on{background:var(--accent);width:20px;border-radius:4px}
   .tour-nav{display:flex;justify-content:space-between;align-items:center;margin-top:18px}
+  /* mobile-first refinements */
+  @media(max-width:560px){
+    .wrap{padding:0 14px 70px}
+    .top-inner{padding:10px 14px;gap:10px}
+    .mh-title{font-size:24px}.mission-hero{padding:16px}
+    .mh-stats{gap:18px;margin-top:16px}.mh-stat .v{font-size:26px}
+    .gauge-wrap{margin-left:0;text-align:left;width:100%;display:flex;align-items:center;gap:14px}
+    .gauge-wrap .lab{margin-top:0}
+    .section-title{margin:22px 2px 12px}.section-title h2{font-size:19px}
+    .sim{gap:14px}
+    .fstage{flex-direction:column;align-items:stretch;gap:6px}
+    .fstage .fl,.fstage .fv{width:auto;text-align:left}
+    .gaprow{flex-wrap:wrap}.gaprow .nm{width:100%}
+    .health{grid-template-columns:repeat(2,1fr)}
+    .np-title{font-size:20px}
+    .sc-title{font-size:19px}
+  }
   ::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-thumb{background:#4E392B;border-radius:6px}
 </style>
 </head>
@@ -218,7 +245,7 @@
 
 <header class="top">
   <div class="top-inner">
-    <div class="brand"><span class="logo"><img src="data:image/png;base64,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" alt="Lyzr"></span><span>$100M Mission Control<small id="asof">Founder Decision Intelligence</small></span></div>
+    <div class="brand"><span class="logo"><img src="data:image/png;base64,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" alt="Lyzr"></span><span>$100M Mission Control<small id="asof">Founder Decision Intelligence</small></span></div>
     <nav class="tabs" id="tabs">
       <button class="tab active" data-v="home">Mission Control</button>
       <button class="tab" data-v="brief">Daily Brief</button>
@@ -243,7 +270,7 @@
           <div class="barcmp" id="missionBar"><i style="width:0"></i><div class="tick" style="left:100%"></div></div>
           <div class="hint" style="margin-top:6px">Forecast vs. <b style="color:var(--text)">$100M</b> target · white tick = mission line</div>
         </div>
-        <div class="gauge-wrap"><div id="probGauge"></div><div class="lab">Mission probability</div><button class="btn sm" style="margin-top:10px" onclick="go('brief')">Start today's brief →</button></div>
+        <div class="gauge-wrap"><div id="probGauge"></div><div class="lab">Mission probability</div><button class="btn sm" style="margin-top:10px" onclick="openNews()">Start today's brief →</button></div>
       </div>
     </div>
 
@@ -268,22 +295,6 @@
 
     <div class="section-title"><h2>Revenue funnel, backwards</h2><p>Required (to hit $100M) vs. current vs. forecast at every stage. The shortfall is upstream — a pipeline-generation problem.</p></div>
     <div class="card"><div id="funnel"></div></div>
-  </section>
-
-  <!-- DAILY BRIEF -->
-  <section class="view" id="view-brief">
-    <div class="section-title"><h2>Daily brief</h2><p>Your morning ritual — what's happening, top pipeline, top performers, alignment to the mission, and risks. Swipe right to add to today, left to skip.</p></div>
-    <div class="deckwrap">
-      <div class="deckhead"><span class="hint">Drag / swipe · ★ add to today · ✕ skip · ← → keys</span><button class="btn sm" onclick="restartBrief()">↻ Restart</button></div>
-      <div class="stack" id="stack"></div>
-      <div class="deck-controls">
-        <button class="cbtn undo" onclick="undoCard()" title="Undo">↩</button>
-        <button class="cbtn skip" onclick="decide('left')" title="Skip (←)">✕</button>
-        <button class="cbtn note" onclick="decide('right')" title="Add to today (→)">★</button>
-      </div>
-      <div class="progress" id="deckProgress"></div>
-      <div class="hint" style="text-align:center;margin-top:6px">Cards generated live from your Supabase data.</div>
-    </div>
   </section>
 
   <!-- FEED -->
@@ -320,6 +331,20 @@
     Lyzr $100M Mission Control · data served live from Supabase (project <code style="color:inherit">Lyzr-Mission-Control</code>) · figures anchored on Lyzr's public numbers, per-record detail illustrative.<br>
     Mission → Metrics → Relationships → Decisions → Outcomes.
   </footer>
+</div>
+
+<div class="newspop" id="newsPopup">
+  <div class="np-head">
+    <div><div class="np-title">☀️ Today's brief</div><div class="np-sub" id="npSub">Swipe through what matters — or skip straight in.</div></div>
+    <div class="np-actions"><button class="btn sm" id="npTour">✨ Tour</button><button class="btn sm" id="npSkip">Skip →</button></div>
+  </div>
+  <div class="stack" id="stack"></div>
+  <div class="deck-controls">
+    <button class="cbtn undo" onclick="undoCard()" title="Undo">↩</button>
+    <button class="cbtn skip" onclick="decide('left')" title="Skip (←)">✕</button>
+    <button class="cbtn note" onclick="decide('right')" title="Add to today (→)">★</button>
+  </div>
+  <div class="progress" id="deckProgress"></div>
 </div>
 
 <div class="tour" id="tour"><div class="tour-card">
@@ -586,7 +611,7 @@ function buildBrief(){
     verdict:o.prob>=70?'On track':'Attention', vgood:o.prob>=70,
     lines:[`Forecast <b>${fmtM(o.forecast)}</b> against the $100M target.`,`Revenue gap <b>${fmtM(o.gap)}</b> · pipeline gap <b>${fmtM0(o.pipeGap)}</b>.`],
     rec:o.prob>=70?'Hold course — protect the levers driving the forecast.':'The gap is mostly pipeline generation — fund it first.'});
-  DB.decision_feed.filter(f=>f.severity==='critical'||f.severity==='opportunity').slice(0,3).forEach(f=>cards.push({
+  DB.decision_feed.filter(f=>f.severity==='critical'||f.severity==='opportunity').slice(0,2).forEach(f=>cards.push({
     id:'sig'+f.id,ic:sevIcon[f.severity],tag:f.kind,color:f.severity==='opportunity'?'#48CFA1':'#F0685C',
     title:f.title, big:+f.dollar_impact_m?fmtM(+f.dollar_impact_m):null, bigColor:f.severity==='opportunity'?'var(--good)':'var(--bad)',
     lines:[f.why_matters], rec:f.recommendation+(f.proposed_initiative?` → ${f.proposed_initiative}`:'')}));
@@ -598,19 +623,11 @@ function buildBrief(){
   cards.push({id:'perf',ic:'🏅',tag:'Top performers',color:'#F0AD46',title:'Highest-performing teams',
     items:perf.map(d=>[`${d.icon} ${d.name}`,`prod ${d.productivity} · align ${d.alignment}`]),
     rec:'Protect and clone what these teams are doing right.'});
-  const mis=DB.departments.filter(d=>d.productivity-d.alignment>=12).sort((a,b)=>(b.productivity-b.alignment)-(a.productivity-a.alignment)).slice(0,4);
-  if(mis.length) cards.push({id:'align',ic:'🧭',tag:'Alignment',color:'#E9A46A',title:'Productive — but aligned to the mission?',
-    items:mis.map(d=>[`${d.icon} ${d.name}`,`prod ${d.productivity} vs align ${d.alignment}`]),
-    rec:'High output, low alignment — redirect this capacity to $100M priorities.'});
   const risk=DB.accounts.filter(a=>+a.churn_risk>=55).sort((a,b)=>b.churn_risk-a.churn_risk).slice(0,5);
   const rArr=risk.reduce((s,a)=>s+ +a.arr_k,0);
   cards.push({id:'risk',ic:'🔻',tag:'Churn risk',color:'#F0685C',title:`${fmtK(rArr)} ARR at risk`, verdict:'Act', vgood:false,
     items:risk.map(a=>[`${a.name} <span class="hint">${a.vertical}</span>`,`risk ${a.churn_risk} · ${fmtK(a.arr_k)}`]),
     rec:'Launch a retention sprint on the highest-ARR, highest-risk accounts.'});
-  DB.initiatives.filter(i=>i.recommendation==='Act now').sort((a,b)=>b.priority_score-a.priority_score).slice(0,2).forEach(i=>cards.push({
-    id:'init'+i.id,ic:'⚡',tag:'Initiative',color:'#48CFA1',title:i.name, big:fmtM(+i.exp_revenue_m), bigColor:'var(--good)',
-    lines:[`Priority score <b>${i.priority_score}</b> · ${Math.round(i.confidence*100)}% confidence · ${i.time_to_impact_days}-day impact.`],
-    rec:'Approve to add to today — highest-scored open initiative.'}));
   return cards;
 }
 let DECK=[], deckPos=0, hist=[], noted={};
@@ -671,9 +688,11 @@ function renderBriefSummary(){
       <h3 style="font-family:var(--serif);font-weight:600;font-size:23px;margin:10px 0 4px">You're ready for the day</h3>
       <p class="hint">${items.length} item${items.length===1?'':'s'} on today's list.</p>
       ${items.length?`<div style="text-align:left;margin-top:14px">${items.map(c=>`<div class="sc-li"><span>${c.ic} ${c.title}</span><b style="color:var(--good)">✓</b></div>`).join("")}</div>`:'<p class="hint" style="margin-top:10px">Nothing flagged. Swipe right on anything worth your attention.</p>'}
-      <button class="btn" style="margin-top:20px" onclick="restartBrief()">↻ Replay brief</button></div></div>`;
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:20px;flex-wrap:wrap"><button class="btn" style="border-color:var(--accent);color:var(--accent2)" onclick="closeNews()">Enter Mission Control →</button><button class="btn sm" onclick="restartBrief()">↻ Replay</button></div></div></div>`;
   updateDeckProgress(true);
 }
+function openNews(){ if(!DECK.length||deckPos>=DECK.length){ restartBrief(); } else { renderDeck(); } $("#newsPopup").classList.add("show"); }
+function closeNews(){ $("#newsPopup").classList.remove("show"); try{sessionStorage.setItem("lyzr_news_seen","1");}catch(e){} go("home"); }
 
 /* ================= ONBOARDING TOUR ================= */
 const TOUR=[
@@ -700,11 +719,13 @@ $("#tourBtn").addEventListener("click",showTour);
 
 /* ================= nav + boot ================= */
 function go(v){ $$(".tab").forEach(t=>t.classList.toggle("active",t.dataset.v===v)); $$(".view").forEach(s=>s.classList.toggle("active",s.id==="view-"+v));
-  if(v==='matrix') renderMatrix(); if(v==='brief') renderDeck(); window.scrollTo({top:0,behavior:"smooth"}); }
-$("#tabs").addEventListener("click",e=>{const b=e.target.closest(".tab"); if(b) go(b.dataset.v);});
+  if(v==='matrix') renderMatrix(); window.scrollTo({top:0,behavior:"smooth"}); }
+$("#tabs").addEventListener("click",e=>{const b=e.target.closest(".tab"); if(!b)return; if(b.dataset.v==='brief'){ openNews(); } else go(b.dataset.v);});
 document.getElementById("simReset").addEventListener("click",()=>{ SIM={...BASE}; renderSimControls(); renderMission(); renderFunnel(); });
-document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeDrawer(); if($("#tour").classList.contains("show")) endTour(); }
-  if($("#view-brief")?.classList.contains("active") && !$("#tour").classList.contains("show")){ if(e.key==="ArrowRight")decide("right"); else if(e.key==="ArrowLeft")decide("left"); } });
+$("#npSkip").addEventListener("click",closeNews);
+$("#npTour").addEventListener("click",()=>{ $("#newsPopup").classList.remove("show"); showTour(); });
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeDrawer(); if($("#tour").classList.contains("show")) endTour(); else if($("#newsPopup").classList.contains("show")) closeNews(); }
+  if($("#newsPopup").classList.contains("show") && !$("#tour").classList.contains("show")){ if(e.key==="ArrowRight")decide("right"); else if(e.key==="ArrowLeft")decide("left"); } });
 window.addEventListener("resize",()=>{ if($("#view-matrix").classList.contains("active")) renderMatrix(); });
 
 function renderAll(){ renderSimControls(); renderMission(); renderGap(); renderHealth(); renderFunnel(); DECK=buildBrief(); renderDeck(); renderFeed(); renderDepts(); renderInitiatives(); }
@@ -713,7 +734,7 @@ function boot(){
     DB=db; initSim(); renderAll();
     $("#overlay").style.display="none";
     $("#conn").innerHTML=`<span class="dot"></span>${LIVE?'Live · Supabase':'Preview data'}`;
-    try{ if(localStorage.getItem("lyzr_mc_tour")!=="done") showTour(); }catch(e){ showTour(); }
+    try{ if(!sessionStorage.getItem("lyzr_news_seen")) openNews(); }catch(e){ openNews(); }
   }).catch(err=>{
     $("#overlay .spin").style.display="none";
     $("#overlayMsg").innerHTML=`<b style="color:var(--bad)">Couldn't reach Supabase.</b><br>${err.message}<br><br>This build reads live from the <code>Lyzr-Mission-Control</code> project. Check the project is active and the anon key is valid, then <button class="btn sm" onclick="location.reload()">retry</button>.`;
