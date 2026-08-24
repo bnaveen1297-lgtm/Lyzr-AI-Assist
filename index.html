@@ -177,7 +177,8 @@
   .kv .cell .v{font-size:19px;font-weight:800;margin-top:3px;font-variant-numeric:tabular-nums}
 
   /* assumptions */
-  .assume{display:none;position:fixed;top:70px;right:22px;width:320px;background:var(--bg2);border:1px solid var(--border2);border-radius:14px;box-shadow:var(--shadow);z-index:70;padding:16px}
+  .assume{display:none;position:fixed;top:70px;right:22px;width:320px;max-width:calc(100vw - 28px);max-height:calc(100vh - 90px);overflow-y:auto;background:var(--bg2);border:1px solid var(--border2);border-radius:14px;box-shadow:var(--shadow);z-index:70;padding:16px}
+  @media(max-width:560px){.assume{top:auto;bottom:0;left:0;right:0;width:100%;max-width:100%;border-radius:16px 16px 0 0;max-height:80vh;padding:16px 16px calc(16px + env(safe-area-inset-bottom))}}
   .assume.show{display:block;animation:fade .2s}
   .assume h4{margin:0 0 3px;font-size:14px}
   .assume .arow{margin-top:14px}
@@ -261,8 +262,8 @@
 </header>
 
 <div class="assume" id="assumePanel">
-  <h4>Model assumptions</h4>
-  <div class="hint">Everything recalculates live. Drop your real data later — this is the contract.</div>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h4 style="margin:0">Model assumptions</h4><button id="assumeClose" aria-label="Close" style="border:1px solid var(--border2);background:var(--surface);color:var(--text);width:30px;height:30px;border-radius:8px;cursor:pointer;font-size:15px;flex:none">✕</button></div>
+  <div class="hint" style="margin-top:4px">Everything recalculates live. Drop your real data later — this is the contract.</div>
   <div class="arow">
     <label>Current ARR <b id="lArr">$12.0M</b></label>
     <input type="range" id="sArr" min="4" max="24" step="0.5" value="12">
@@ -981,7 +982,9 @@ $("#periodSeg").addEventListener("click",e=>{ const b=e.target.closest("button")
 $("#revSeg").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return; $$("#revSeg button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); renderRev(b.dataset.m); });
 
 /* ---------- assumptions panel ---------- */
-$("#assumeBtn").addEventListener("click",()=> $("#assumePanel").classList.toggle("show"));
+$("#assumeBtn").addEventListener("click",(e)=>{ e.stopPropagation(); $("#assumePanel").classList.toggle("show"); });
+$("#assumeClose").addEventListener("click",()=> $("#assumePanel").classList.remove("show"));
+document.addEventListener("click",(e)=>{ const p=$("#assumePanel"); if(p.classList.contains("show") && !p.contains(e.target) && e.target.id!=="assumeBtn") p.classList.remove("show"); });
 function bindSlider(id,key,fmt,label){ const el=$(id); el.addEventListener("input",()=>{ A[key]=+el.value; $(label).textContent=fmt(+el.value); recompute(); }); }
 bindSlider("#sArr","arr",v=>"$"+v.toFixed(1)+"M","#lArr");
 bindSlider("#sBurn","burn",v=>"$"+v.toFixed(1)+"M","#lBurn");

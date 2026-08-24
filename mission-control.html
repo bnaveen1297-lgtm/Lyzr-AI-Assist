@@ -847,7 +847,9 @@ function renderBriefSummary(){
   updateDeckProgress(true);
 }
 function openNews(){ if(!DECK.length||deckPos>=DECK.length){ restartBrief(); } else { renderDeck(); } $("#newsPopup").classList.add("show"); }
-function closeNews(){ $("#newsPopup").classList.remove("show"); try{sessionStorage.setItem("lyzr_news_seen","1");}catch(e){} go("home"); }
+function closeNews(){ $("#newsPopup").classList.remove("show"); try{sessionStorage.setItem("lyzr_news_seen","1");}catch(e){} go("home");
+  let tourDone=false; try{tourDone=localStorage.getItem("lyzr_mc_tour")==="done";}catch(e){}
+  if(!tourDone) setTimeout(showTour,400); /* first-visit demo tour after the brief */ }
 
 /* ================= ONBOARDING TOUR ================= */
 const TOUR=[
