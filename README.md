@@ -1,6 +1,27 @@
-# Lyzr Founders' Cockpit
+# Lyzr $100M Mission Control
 
-A single, self-contained analytics dashboard for the founders' office — one HTML file, no build step, no dependencies, works offline. Open `index.html` in any browser.
+> **Flagship: [`mission-control.html`](mission-control.html)** — a Founder Decision Intelligence system (Supabase-backed). `index.html` is the earlier self-contained brand dashboard.
+
+Not another analytics dashboard — a **decision system**. One question drives everything: *are we on track for $100M, and if not, what should the founder do today?* Every metric ladders up to the mission (Mission → AOP → OKR → KPI → Initiative → Resource → Outcome).
+
+**Live data:** reads from a dedicated **Supabase** project (`Lyzr-Mission-Control`) via read-only RLS. Deploy by importing this repo into Vercel (`vercel.json` routes `/` to `mission-control.html`).
+
+### What's inside `mission-control.html`
+- **News popup first** — a Bumble-style morning brief (6 essential cards) that opens on load; swipe right to add to today, or **Skip →** straight into the dashboard. Mobile-first.
+- **Mission Control** — live `$100M` simulation: move win-rate / ACV / pipeline / churn / capacity and the forecast, revenue gap and mission probability recompute instantly. Plus pipeline math, gap decomposition, business-health scores, and the reverse funnel.
+- **Decision Feed · Growth × Productivity matrix · Department Intelligence · Strategic Initiatives** — signals → decisions → did-it-work.
+- **MIS** — the detailed management tables a data-first founder drills into: revenue by segment/vertical/product/geo, **per-resource GTM productivity** (capacity hrs, talk-time, demos, bookings vs target), the **80k builders → enterprise** PLG engine, people economics, and account health.
+- **Onboarding tour** (skippable) for the CEO.
+- **UAT:** 30/30 automated checks pass (all screens, interactions, mobile — no horizontal overflow, no JS errors).
+
+### The CEO angle (built for how Siva thinks)
+Lyzr began as *"Data Analyzr"* and Siva is an ex-Tesco data engineer — he thinks in data and MIS, tracks **Contracted ARR**, 95% gross margin, break-even, and the free-builder→enterprise funnel, under his *Organizational General Intelligence* thesis. The MIS layer and the contracted-ARR / builder-funnel / per-resource-productivity tables are built for exactly that.
+
+---
+
+## (Earlier deliverable) Lyzr Founders' Cockpit — `index.html`
+
+A single, self-contained analytics dashboard — one HTML file, no build step, works offline.
 
 Built in response to the brief: *"a dashboard with a news feed that tracks all internal metrics across marketing, sales, project management, etc. — simple for a founder to see, with in-depth access."*
 

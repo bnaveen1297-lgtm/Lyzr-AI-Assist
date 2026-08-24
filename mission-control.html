@@ -220,6 +220,17 @@
   .tour-dots i{width:7px;height:7px;border-radius:50%;background:var(--border2);transition:.2s}
   .tour-dots i.on{background:var(--accent);width:20px;border-radius:4px}
   .tour-nav{display:flex;justify-content:space-between;align-items:center;margin-top:18px}
+  /* MIS */
+  .mis-wrap{padding:0;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .mis-wrap table{min-width:600px}
+  .mis-wrap td,.mis-wrap th{white-space:nowrap}
+  tr.grouprow td{background:var(--bg2);font-weight:700;color:var(--accent2);text-transform:uppercase;font-size:10.5px;letter-spacing:.4px}
+  .misboard{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:6px}
+  @media(max-width:900px){.misboard{grid-template-columns:repeat(2,1fr)}}
+  .mbc{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px}
+  .mbc .k{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;font-weight:700}
+  .mbc .v{font-size:22px;font-weight:700;font-family:var(--serif);font-variant-numeric:tabular-nums;margin-top:3px}
+  .mbc .d{font-size:11px;color:var(--text2);margin-top:2px}
   /* mobile-first refinements */
   @media(max-width:560px){
     .wrap{padding:0 14px 70px}
@@ -253,6 +264,7 @@
       <button class="tab" data-v="matrix">Growth × Productivity</button>
       <button class="tab" data-v="depts">Department Intelligence</button>
       <button class="tab" data-v="initiatives">Strategic Initiatives</button>
+      <button class="tab" data-v="mis">MIS</button>
     </nav>
     <div class="top-right"><button class="btn sm" id="tourBtn">✨ Tour</button><span class="conn" id="conn"><span class="dot"></span>Connecting…</span></div>
   </div>
@@ -327,6 +339,22 @@
     <div class="cols c-1-1" id="decList"></div>
   </section>
 
+  <!-- MIS -->
+  <section class="view" id="view-mis">
+    <div class="section-title"><h2>MIS — management information</h2><p>The detailed tables under the one-minute read. Everything a data-first founder drills into: revenue splits, per-resource productivity, the builder→enterprise engine, people economics and account health.</p></div>
+    <div id="misBoard"></div>
+    <div class="section-title"><h2>Revenue MIS</h2><p>ARR by segment, vertical, product and geography — actual vs. AOP target.</p></div>
+    <div class="card mis-wrap"><table id="misRevenue"></table></div>
+    <div class="section-title"><h2>GTM productivity MIS</h2><p>Per-resource output — capacity hours, talk-time, demos and bookings vs. target.</p></div>
+    <div class="card mis-wrap"><table id="misGtm"></table></div>
+    <div class="section-title"><h2>Builder → Enterprise engine</h2><p>The PLG funnel: 80k free builders converting down to enterprise logos.</p></div>
+    <div class="card mis-wrap"><table id="misBuilder"></table></div>
+    <div class="section-title"><h2>People &amp; productivity MIS</h2><p>Headcount economics — cost, ARR influenced, revenue per head, and alignment by team.</p></div>
+    <div class="card mis-wrap"><table id="misPeople"></table></div>
+    <div class="section-title"><h2>Customer MIS</h2><p>Account-level ARR, health, churn risk and expansion potential.</p></div>
+    <div class="card mis-wrap"><table id="misAccounts"></table></div>
+  </section>
+
   <footer>
     Lyzr $100M Mission Control · data served live from Supabase (project <code style="color:inherit">Lyzr-Mission-Control</code>) · figures anchored on Lyzr's public numbers, per-record detail illustrative.<br>
     Mission → Metrics → Relationships → Decisions → Outcomes.
@@ -365,7 +393,7 @@
 /* ================= data layer ================= */
 const SB_URL="https://nphjqwlgoyoqjoflqadp.supabase.co";
 const SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5waGpxd2xnb3lvcWpvZmxxYWRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1ODYwODksImV4cCI6MjEwMzE2MjA4OX0.xUNKsvG8O06nh-tfF_6uYQQrCr8g6jPNmGmOKyUrjZk";
-const TABLES={mission:"mission?select=*",funnel_stages:"funnel_stages?select=*&order=ord",health_scores:"health_scores?select=*&order=ord",gap_components:"gap_components?select=*&order=ord",aop_metrics:"aop_metrics?select=*",objectives:"objectives?select=*&order=ord",key_results:"key_results?select=*&order=ord",departments:"departments?select=*&order=ord",department_metrics:"department_metrics?select=*&order=ord",initiatives:"initiatives?select=*",accounts:"accounts?select=*",decision_feed:"decision_feed?select=*&order=ord",decisions:"decisions?select=*",resource_allocation:"resource_allocation?select=*&order=ord"};
+const TABLES={mission:"mission?select=*",funnel_stages:"funnel_stages?select=*&order=ord",health_scores:"health_scores?select=*&order=ord",gap_components:"gap_components?select=*&order=ord",aop_metrics:"aop_metrics?select=*",objectives:"objectives?select=*&order=ord",key_results:"key_results?select=*&order=ord",departments:"departments?select=*&order=ord",department_metrics:"department_metrics?select=*&order=ord",initiatives:"initiatives?select=*",accounts:"accounts?select=*",decision_feed:"decision_feed?select=*&order=ord",decisions:"decisions?select=*",resource_allocation:"resource_allocation?select=*&order=ord",revenue_breakdown:"revenue_breakdown?select=*&order=ord",gtm_productivity:"gtm_productivity?select=*&order=ord",builder_funnel:"builder_funnel?select=*&order=ord"};
 let DB={}, LIVE=true;
 async function loadAll(){
   if(window.__SEED__){ LIVE=false; const s=JSON.parse(JSON.stringify(window.__SEED__)); s.mission=Array.isArray(s.mission)?s.mission[0]:s.mission; return s; }
@@ -603,8 +631,79 @@ function renderInitiatives(){
   }).join("");
 }
 
-/* ================= DAILY BRIEF (swipe deck from Supabase) ================= */
+/* ================= MIS (detailed management tables) ================= */
 const fmtK=v=> +v>=1000? "$"+(+v/1000).toFixed(1)+"M" : "$"+Math.round(+v)+"K";
+function achColor(a){ return a>=100?"var(--good)":a>=90?"var(--warn)":"var(--bad)"; }
+function renderMIS(){
+  const m=DB.mission;
+  const live=+m.current_arr_m, contracted=+(live*1.2).toFixed(1);
+  const netNew=+(live*0.85).toFixed(1), burnMult=+(m.annual_burn_m/netNew).toFixed(1);
+  const runway=Math.round(m.cash_m/(m.annual_burn_m/12)), rpe=Math.round(live*1000/m.headcount);
+  const builders=(DB.builder_funnel[0]||{}).count||0;
+  const board=[
+    ["Live ARR",fmtM(live),"today"],
+    ["Contracted ARR",fmtM(contracted),"incl. signed, not-yet-live"],
+    ["Net-new ARR (yr)",fmtM(netNew),"new + expansion"],
+    ["Gross margin",Math.round(m.gross_margin*100)+"%","software"],
+    ["Net burn (yr)",fmtM(m.annual_burn_m),"$"+ (m.annual_burn_m/12).toFixed(1)+"M/mo"],
+    ["Burn multiple",burnMult+"x",burnMult<=1.5?"efficient":"watch"],
+    ["Runway",runway+" mo","$"+m.cash_m+"M bank"],
+    ["ARR / employee","$"+rpe+"K",m.headcount+" staff · "+builders.toLocaleString()+" builders"],
+  ];
+  $("#misBoard").innerHTML=`<div class="misboard">`+board.map(b=>`<div class="mbc"><div class="k">${b[0]}</div><div class="v">${b[1]}</div><div class="d">${b[2]}</div></div>`).join("")+`</div>`;
+
+  // Revenue MIS (grouped)
+  const dims=["Segment","Vertical","Product","Geography"];
+  let rh=`<thead><tr><th>Line</th><th class="num">ARR</th><th class="num">% of ARR</th><th class="num">AOP target</th><th class="num">Attainment</th><th class="num">Growth YoY</th></tr></thead><tbody>`;
+  dims.forEach(dim=>{
+    rh+=`<tr class="grouprow"><td colspan="6">${dim}</td></tr>`;
+    DB.revenue_breakdown.filter(r=>r.dimension===dim).forEach(r=>{
+      const att=Math.round(r.arr_m/r.target_m*100);
+      rh+=`<tr><td>${r.name}</td><td class="num">${fmtM(+r.arr_m)}</td><td class="num">${Math.round(r.arr_m/live*100)}%</td><td class="num" style="color:var(--muted)">${fmtM(+r.target_m)}</td><td class="num" style="color:${achColor(att)}">${att}%</td><td class="num">+${r.growth}%</td></tr>`;
+    });
+  });
+  $("#misRevenue").innerHTML=rh+`</tbody>`;
+
+  // GTM productivity MIS
+  let gh=`<thead><tr><th>Team</th><th class="num">HC</th><th class="num">Capacity hrs</th><th class="num">Talk-time</th><th class="num">Demos</th><th class="num">Bookings</th><th class="num">Win rate</th><th class="num">Attainment</th></tr></thead><tbody>`;
+  DB.gtm_productivity.forEach(g=>{
+    const hasB=+g.bookings_target_m>0, att=hasB?Math.round(g.bookings_m/g.bookings_target_m*100):(+g.demos_target>0?Math.round(g.demos/g.demos_target*100):null);
+    const dash=v=>v?v:"—";
+    gh+=`<tr><td><b>${g.team}</b></td><td class="num">${g.headcount}</td><td class="num">${g.capacity_hrs}h</td><td class="num">${dash(g.talk_time_hrs&&g.talk_time_hrs+'h')}</td>
+      <td class="num">${+g.demos_target>0?g.demos+' / '+g.demos_target:'—'}</td>
+      <td class="num">${hasB?fmtM(+g.bookings_m)+' / '+fmtM(+g.bookings_target_m):'—'}</td>
+      <td class="num">${+g.win_rate>0?Math.round(g.win_rate*100)+'%':'—'}</td>
+      <td class="num" style="color:${att!=null?achColor(att):'var(--muted)'}">${att!=null?att+'%':'—'}</td></tr>`;
+  });
+  $("#misGtm").innerHTML=gh+`</tbody>`;
+
+  // Builder funnel MIS
+  let bh=`<thead><tr><th>Stage</th><th class="num">Count</th><th class="num">Conv. from prev</th><th>Note</th></tr></thead><tbody>`;
+  DB.builder_funnel.forEach((s,i)=>{
+    const prev=DB.builder_funnel[i-1];
+    const conv=prev?((s.count/prev.count*100)).toFixed(prev.count/s.count>50?2:1)+"%":"—";
+    bh+=`<tr><td><b>${s.stage}</b></td><td class="num">${(+s.count).toLocaleString()}</td><td class="num" style="color:${i===0?'var(--muted)':'var(--accent2)'}">${conv}</td><td style="color:var(--text2)">${s.note||''}</td></tr>`;
+  });
+  $("#misBuilder").innerHTML=bh+`</tbody>`;
+
+  // People / productivity MIS
+  let ph=`<thead><tr><th>Team</th><th class="num">HC</th><th class="num">Open</th><th class="num">Cost</th><th class="num">ARR infl.</th><th class="num">ARR / head</th><th class="num">Productivity</th><th class="num">Alignment</th><th class="num">Strat. cap.</th></tr></thead><tbody>`;
+  DB.departments.forEach(d=>{
+    const rph=Math.round(d.revenue_impact_m*1000/d.headcount);
+    ph+=`<tr><td><b>${d.icon} ${d.name}</b></td><td class="num">${d.headcount}</td><td class="num" style="color:var(--muted)">+${d.open_reqs}</td><td class="num">${fmtM(+d.cost_m)}</td><td class="num">${fmtM(+d.revenue_impact_m)}</td><td class="num">$${rph}K</td><td class="num" style="color:${scoreColor(d.productivity)}">${d.productivity}</td><td class="num" style="color:${scoreColor(d.alignment)}">${d.alignment}</td><td class="num">${Math.round(d.strategic_capacity*100)}%</td></tr>`;
+  });
+  $("#misPeople").innerHTML=ph+`</tbody>`;
+
+  // Customer MIS
+  const accts=DB.accounts.slice().sort((a,b)=>b.arr_k-a.arr_k);
+  let ah=`<thead><tr><th>Account</th><th>Segment</th><th>Vertical</th><th class="num">ARR</th><th class="num">Health</th><th class="num">Churn risk</th><th class="num">Expansion</th><th>Lifecycle</th></tr></thead><tbody>`;
+  accts.forEach(a=>{
+    ah+=`<tr><td><b>${a.name}</b></td><td>${a.segment}</td><td>${a.vertical}</td><td class="num">${fmtK(a.arr_k)}</td><td class="num" style="color:${scoreColor(a.health_score)}">${a.health_score}</td><td class="num" style="color:${a.churn_risk>=55?'var(--bad)':a.churn_risk>=40?'var(--warn)':'var(--good)'}">${a.churn_risk}</td><td class="num">${a.expansion_potential}</td><td style="color:var(--text2)">${a.lifecycle}</td></tr>`;
+  });
+  $("#misAccounts").innerHTML=ah+`</tbody>`;
+}
+
+/* ================= DAILY BRIEF (swipe deck from Supabase) ================= */
 function buildBrief(){
   const o=computeSim(SIM), cards=[];
   cards.push({id:'mission',ic:'🎯',tag:'Mission',color:'#DE7A45',title:`$100M mission — ${o.prob}% probability`,
@@ -728,7 +827,7 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeDrawer(); if
   if($("#newsPopup").classList.contains("show") && !$("#tour").classList.contains("show")){ if(e.key==="ArrowRight")decide("right"); else if(e.key==="ArrowLeft")decide("left"); } });
 window.addEventListener("resize",()=>{ if($("#view-matrix").classList.contains("active")) renderMatrix(); });
 
-function renderAll(){ renderSimControls(); renderMission(); renderGap(); renderHealth(); renderFunnel(); DECK=buildBrief(); renderDeck(); renderFeed(); renderDepts(); renderInitiatives(); }
+function renderAll(){ renderSimControls(); renderMission(); renderGap(); renderHealth(); renderFunnel(); DECK=buildBrief(); renderDeck(); renderFeed(); renderDepts(); renderInitiatives(); renderMIS(); }
 function boot(){
   loadAll().then(db=>{
     DB=db; initSim(); renderAll();
