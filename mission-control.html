@@ -848,8 +848,8 @@ function renderBriefSummary(){
 }
 function openNews(){ if(!DECK.length||deckPos>=DECK.length){ restartBrief(); } else { renderDeck(); } $("#newsPopup").classList.add("show"); }
 function closeNews(){ $("#newsPopup").classList.remove("show"); try{sessionStorage.setItem("lyzr_news_seen","1");}catch(e){} go("home");
-  let tourDone=false; try{tourDone=localStorage.getItem("lyzr_mc_tour")==="done";}catch(e){}
-  if(!tourDone) setTimeout(showTour,400); /* first-visit demo tour after the brief */ }
+  let tourSeen=false; try{tourSeen=sessionStorage.getItem("lyzr_mc_tour")==="1";}catch(e){}
+  if(!tourSeen) setTimeout(showTour,400); /* mandatory demo tour after the brief, once per visit */ }
 
 /* ================= ONBOARDING TOUR ================= */
 const TOUR=[
@@ -868,7 +868,7 @@ function renderTour(){
   $("#tourBack").style.visibility=tourStep===0?'hidden':'visible';
   $("#tourNext").textContent=tourStep===TOUR.length-1?'Start →':'Next';
 }
-function endTour(){ $("#tour").classList.remove("show"); try{localStorage.setItem("lyzr_mc_tour","done");}catch(e){} }
+function endTour(){ $("#tour").classList.remove("show"); try{sessionStorage.setItem("lyzr_mc_tour","1");}catch(e){} }
 $("#tourNext").addEventListener("click",()=>{ if(tourStep<TOUR.length-1){tourStep++;renderTour();} else endTour(); });
 $("#tourBack").addEventListener("click",()=>{ if(tourStep>0){tourStep--;renderTour();} });
 $("#tourSkip").addEventListener("click",endTour);
