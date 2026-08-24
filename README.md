@@ -6,6 +6,24 @@ Not another analytics dashboard — a **decision system**. One question drives e
 
 **Live data:** reads from a dedicated **Supabase** project (`Lyzr-Mission-Control`) via read-only RLS. Deploy by importing this repo into Vercel (`vercel.json` routes `/` to `mission-control.html`).
 
+## Screenshots
+
+**1 · Daily news bites** — the Cockpit opens with a one-minute swipe brief (swipe right to add to today, left to skip), then lands in the dashboard:
+
+<p align="center"><img src="screenshots/daily-news-bites.png" width="340" alt="Daily news bites (mobile)"> <img src="screenshots/team-scorecard-bite.png" width="340" alt="12-team scorecard bite (mobile)"></p>
+
+**2 · Live $100M simulation** — move win rate, ACV, pipeline, churn or capacity and the forecast, revenue gap and mission probability recompute instantly:
+
+![Live $100M simulation](screenshots/live-100m-simulation.png)
+
+**3 · Growth × Productivity matrix** — every initiative placed by business impact vs. productivity (double down / fix / redeploy / stop), plus where the next dollar or person should go:
+
+![Growth × Productivity matrix](screenshots/growth-productivity-matrix.png)
+
+**4 · MIS layer** — the detailed management tables under the one-minute read (revenue splits, per-resource GTM productivity, builder→enterprise funnel, people economics, account health):
+
+![MIS detail](screenshots/mis-detail.png)
+
 ### What's inside `mission-control.html`
 - **News popup first** — a Bumble-style morning brief (6 essential cards) that opens on load; swipe right to add to today, or **Skip →** straight into the dashboard. Mobile-first.
 - **Mission Control** — live `$100M` simulation: move win-rate / ACV / pipeline / churn / capacity and the forecast, revenue gap and mission probability recompute instantly. Plus pipeline math, gap decomposition, business-health scores, and the reverse funnel.
