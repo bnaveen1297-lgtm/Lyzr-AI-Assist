@@ -18,9 +18,14 @@ Three layers, one toggle — exactly the "he sees one screen, then drills in" be
 | View | Who it's for | What it answers |
 |------|--------------|-----------------|
 | **Founder View** | CXO, 10-second read | Revenue, burn, runway, the 5 board-level efficiency ratios, headcount health, and the 3 things that need him today |
+| **Founder Brief** | CXO, one-minute read | A Bumble-style **swipe deck** — one department per card (what's happening, team size, productivity, impact, right-resources?, leader performance, EOP alignment, top performers, the big deal coming). **Swipe right to note, left to skip** — touch on mobile, drag or ←/→ keys on web. Ends with a summary of everything noted (persisted in the browser). |
 | **Departments** | Any team lead | All 12 teams on one comparable framework, click-to-drill |
 | **Correlation Engine** | The analyst | The *real* relationships — Pearson r computed live on 12 months of data |
 | **Insight Feed** | Everyone | The dashboard telling you what changed and why — the "news feed" |
+
+## Brand
+
+Styled to match **lyzr.ai** — warm espresso background, terracotta accent, editorial serif headlines (Fraunces) over clean sans body (Inter), translucent pill controls, and the real Lyzr logo embedded. Fully **web + mobile responsive**; the Founder Brief is built mobile-first.
 
 ## Why the correlation engine matters
 
