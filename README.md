@@ -10,7 +10,7 @@ Built in response to the brief: *"a dashboard with a news feed that tracks all i
 
 The founder doesn't have a data source yet, and he's screening for an **analytical brain** — someone who finds *relationships* between data points, not someone who just renders numbers. So this is built as two things at once:
 
-1. **A working model today** — a coherent, synthetic AI-SaaS scenario anchored on his stated unit economics (**$8M ARR, ~$10M net burn**), so every number ties to every other number.
+1. **A working model today** — a coherent AI-SaaS scenario anchored on Lyzr's **real public figures**: **~$12M ARR** (Jun'26), **~32 enterprise customers** (~$250K ACV, largest ~$2M), **Accenture-backed** ($250M valuation, ~$100M Series B), **~88 staff + 172 open reqs**, pushing to **$100M ARR**. Every number ties to every other number. (The founder's brief said "assume $8M ARR / $10M burn" — the ⚙︎ Assumptions panel makes ARR/burn editable, so you can flip to his figures in one drag and show you cross-referenced the public numbers.)
 2. **A data contract for tomorrow** — the same schema accepts real CSV / Google Sheets / product-API data and every view repopulates automatically.
 
 Three layers, one toggle — exactly the "he sees one screen, then drills in" behaviour he described:
@@ -30,9 +30,9 @@ So the analytics layer computes **actual Pearson correlations** in-browser acros
 
 ## Headcount model (method, not vibes)
 
-- **Recommended total heads = ARR ÷ target ARR/employee** (default $165K/FTE → ~49 heads at $8M).
-- Allocated across 12 functions using SaaS benchmarks for a company scaling toward $100M (R&D ~38%, GTM ~29%, CS/Support ~14%, G&A ~9%).
-- Each department shows **actual vs benchmark target** — so over/under-staffing is visible at a glance. (The model flags Sales *under*-hiring while pushing growth, and Support *over* on heads yet *under* on CSAT — a process problem, not a hiring one.)
+- **Recommended total heads = ARR ÷ target ARR/employee** (default $150K/FTE → ~80 heads right-sized for $12M).
+- Allocated across 12 functions using SaaS benchmarks for a company scaling toward $100M (R&D ~40%, GTM ~27%, CS/Support ~14%, G&A ~9%).
+- Each department shows **actual vs benchmark target vs open reqs** — so the real story is visible: current headcount (~88) is roughly right-sized for $12M, but **172 open reqs** are pre-building for $100M. The constraint isn't capital, it's **sequencing 172 hires against a 39-day time-to-hire and a 78% offer-acceptance rate**.
 
 ## Board-level efficiency ratios
 
@@ -56,4 +56,4 @@ Replace the `buildSeries()` output and the `DEPTS` snapshot with real values in 
 
 ---
 
-*Sample model — all figures are synthetic and anchored on the stated unit economics, not live Lyzr data.*
+*Model anchored on Lyzr's public figures (ARR, customers, funding, headcount). The monthly time-series and per-team operating detail are illustrative — plug in the real data through the same schema to make it live.*

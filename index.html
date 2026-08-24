@@ -203,20 +203,20 @@
   <h4>Model assumptions</h4>
   <div class="hint">Everything recalculates live. Drop your real data later — this is the contract.</div>
   <div class="arow">
-    <label>Current ARR <b id="lArr">$8.0M</b></label>
-    <input type="range" id="sArr" min="4" max="16" step="0.5" value="8">
+    <label>Current ARR <b id="lArr">$12.0M</b></label>
+    <input type="range" id="sArr" min="4" max="24" step="0.5" value="12">
   </div>
   <div class="arow">
-    <label>Annual net burn <b id="lBurn">$10.0M</b></label>
-    <input type="range" id="sBurn" min="4" max="16" step="0.5" value="10">
+    <label>Annual net burn <b id="lBurn">$20.0M</b></label>
+    <input type="range" id="sBurn" min="6" max="40" step="0.5" value="20">
   </div>
   <div class="arow">
-    <label>Target ARR / employee <b id="lFte">$165K</b></label>
-    <input type="range" id="sFte" min="120" max="260" step="5" value="165">
+    <label>Target ARR / employee <b id="lFte">$150K</b></label>
+    <input type="range" id="sFte" min="100" max="260" step="5" value="150">
   </div>
   <div class="arow">
-    <label>YoY ARR growth <b id="lGrow">122%</b></label>
-    <input type="range" id="sGrow" min="40" max="220" step="2" value="122">
+    <label>YoY ARR growth <b id="lGrow">820%</b></label>
+    <input type="range" id="sGrow" min="100" max="1000" step="10" value="820">
   </div>
   <div class="notebox" style="margin-top:16px">Recommended headcount = ARR ÷ target ARR/FTE. Adjust the lever, watch every department's target move.</div>
 </div>
@@ -239,7 +239,7 @@
         <div id="revChart" style="padding:4px 8px 12px"></div>
       </div>
       <div class="card">
-        <div class="card-head"><div><h3>Efficiency scorecard</h3><div class="csub">How a board reads $8M / $10M</div></div></div>
+        <div class="card-head"><div><h3>Efficiency scorecard</h3><div class="csub">How a board reads $12M ARR on $20M burn</div></div></div>
         <div id="effList"></div>
       </div>
     </div>
@@ -306,7 +306,7 @@
   </section>
 
   <footer>
-    Built for the Lyzr founders' office · Sample model — figures are synthetic and anchored on stated unit economics, not live company data.<br>
+    Built for the Lyzr founders' office · Model anchored on Lyzr's public figures — ~$12M ARR (Jun'26), ~32 enterprise customers, Accenture-backed, ~88 staff + 172 open reqs, pushing to $100M. Monthly series &amp; per-team detail are illustrative.<br>
     Swap the data layer (CSV / Google Sheets / product API) into the same schema and every view populates automatically.
   </footer>
 </div>
@@ -329,7 +329,7 @@ const MONTHS = ["Sep'25","Oct'25","Nov'25","Dec'25","Jan'26","Feb'26","Mar'26","
 const N = MONTHS.length;
 
 /* ---------- editable assumptions ---------- */
-const A = { arr:8.0, burn:10.0, fte:165, growth:122 };
+const A = { arr:12.0, burn:20.0, fte:150, growth:820 };
 
 /* ---------- build coherent monthly series with REAL underlying relationships ---------- */
 function buildSeries(){
@@ -338,24 +338,24 @@ function buildSeries(){
   const startARR = A.arr/(1+A.growth/100);
   s.arr = Array.from({length:N},(_,i)=>{ const t=i/(N-1); return +(startARR*Math.pow(A.arr/startARR,t)*(1+noise(0.012))).toFixed(2); });
   s.newARR = s.arr.map((v,i)=> i===0? +(v*0.09).toFixed(3) : +(Math.max(0.08,(v-s.arr[i-1])+ v*0.02*(0.6+rnd()*0.5)).toFixed(3)) ); // gross new incl expansion
-  // sales capacity
-  s.reps = [5,5,6,6,6,7,7,7,8,8,8,8];
-  s.spend = Array.from({length:N},(_,i)=> +(0.17 + i*0.011 + noise(0.02)).toFixed(3)); // $M/mo marketing
-  s.mql   = s.spend.map(v=> Math.round(v*1000*1.55 + noise(60)));          // spend -> MQL
-  s.sql   = s.mql.map(v=> Math.round(v*0.28 + noise(14)));                 // MQL -> SQL
-  s.demos = s.sql.map((v,i)=> Math.round(v*0.42 + s.reps[i]*2.1 + noise(8))); // SQL + capacity -> demos
-  s.talk  = s.demos.map((v,i)=> Math.round(v*1.15 + s.reps[i]*6 + noise(10))); // talk-time hrs
-  s.winRate = Array.from({length:N},(_,i)=> +(0.20 + i*0.004 + noise(0.015)).toFixed(3));
-  s.bookings = s.demos.map((v,i)=> +((v*s.winRate[i]*0.021) + noise(0.03)).toFixed(3)); // $M new bookings, driven by demos*winrate
-  s.acv = 0.041; // $41K ACV
-  s.newLogos = s.bookings.map(v=> Math.round(v/s.acv));
-  s.custActive = []; let cum=110; s.newLogos.forEach((n,i)=>{cum+=n-Math.round(cum*0.017); s.custActive.push(cum);}); // churn 1.7%/mo
-  s.cac = s.newLogos.map((n,i)=> +(((s.spend[i]+ s.reps[i]*0.014)*1000/Math.max(1,n))).toFixed(1)); // $K CAC
-  s.tickets = s.custActive.map(v=> Math.round(v*3.1 + noise(60)));         // customers -> tickets
-  s.supportHeads=[4,4,4,5,5,5,5,5,5,5,5,5];
-  s.csat = s.tickets.map((t,i)=> +(94 - (t/s.supportHeads[i])/40 + noise(0.7)).toFixed(1)); // load -> csat (inverse)
-  s.headcount = [38,40,42,44,45,47,48,49,50,51,52,52];
-  s.burnMo = Array.from({length:N},(_,i)=> +((A.burn/12)*(0.82+i*0.03/N*12*0.5)*(1+noise(0.03))).toFixed(3));
+  // sales capacity (enterprise AE team scaling toward $100M)
+  s.reps = [7,8,9,10,11,12,12,13,13,14,14,14];
+  s.spend = Array.from({length:N},(_,i)=> +(0.30 + i*0.022 + noise(0.03)).toFixed(3)); // $M/mo marketing
+  s.mql   = s.spend.map(v=> Math.round(v*1000*1.35 + noise(70)));          // spend -> MQL
+  s.sql   = s.mql.map(v=> Math.round(v*0.26 + noise(16)));                 // MQL -> SQL
+  s.demos = s.sql.map((v,i)=> Math.round(v*0.40 + s.reps[i]*2.4 + noise(10))); // SQL + capacity -> demos
+  s.talk  = s.demos.map((v,i)=> Math.round(v*1.15 + s.reps[i]*6 + noise(12))); // talk-time hrs
+  s.winRate = Array.from({length:N},(_,i)=> +(0.22 + i*0.004 + noise(0.015)).toFixed(3));
+  s.bookings = s.demos.map((v,i)=> +((v*s.winRate[i]*0.016) + noise(0.05)).toFixed(3)); // $M new bookings, driven by demos*winrate
+  s.acv = 0.30; // $300K blended enterprise ACV
+  s.newLogos = s.bookings.map(v=> Math.max(1,Math.round(v/s.acv)));
+  s.custActive = []; let cum=20; s.newLogos.forEach((n,i)=>{cum+=n-Math.round(cum*0.012); s.custActive.push(cum);}); // ~32 enterprise logos, low churn
+  s.cac = s.newLogos.map((n,i)=> +(((s.spend[i]+ s.reps[i]*0.016)*1000/Math.max(1,n))).toFixed(1)); // $K CAC
+  s.tickets = s.custActive.map(v=> Math.round(v*22 + noise(120)));         // enterprise: many seats/agents per logo
+  s.supportHeads=[3,3,4,4,4,5,5,5,5,5,5,5];
+  s.csat = s.tickets.map((t,i)=> +(94 - (t/s.supportHeads[i])/48 + noise(0.7)).toFixed(1)); // load -> csat (inverse)
+  s.headcount = [40,46,52,58,64,70,74,78,82,85,87,88];
+  s.burnMo = Array.from({length:N},(_,i)=> +((A.burn/12)*(0.72+i*0.05/N*12*0.5)*(1+noise(0.03))).toFixed(3));
   return s;
 }
 let S = buildSeries();
@@ -365,33 +365,34 @@ function kpis(){
   const arr=A.arr, burn=A.burn;
   const netNewYr = S.newARR.reduce((a,b)=>a+b,0) - arr*0.11; // minus churn drag
   const burnMult = +(burn/Math.max(0.1,netNewYr)).toFixed(1);
-  const cashBank = 14.2; // $M
+  const cashBank = 105; // $M — post Series B (~$100M raised Jul'26)
   const runway = Math.round(cashBank/(burn/12));
   const arrPerFte = Math.round(arr*1000/S.headcount[N-1]); // $K
-  const gm=72;
+  const gm=74;
   const fcfMargin = -(burn/arr)*100;
   const ruleOf40 = Math.round(A.growth + fcfMargin);
-  const nrr=118, cacPay= Math.round(S.cac[N-1]/(A.arr*1000/ S.custActive[N-1] /12 *0.72));
-  return {arr,burn,netNewYr:+netNewYr.toFixed(1),burnMult,runway,arrPerFte,gm,ruleOf40,nrr,cacPay:14,growth:A.growth};
+  const nrr=124, cacPay=13;
+  const customers=S.custActive[N-1];
+  return {arr,burn,netNewYr:+netNewYr.toFixed(1),burnMult,runway,arrPerFte,gm,ruleOf40,nrr,cacPay,growth:A.growth,cashBank,customers};
 }
 
 /* ---------- departments (current-month snapshot on common framework) ---------- */
 const DEPTS = [
-  {id:"sales",name:"Sales",icon:"💰",color:"#7C5CFC",cap:110,util:0.82,
-   out:{label:"New bookings",val:458,tgt:520,unit:"$K"}, eff:88,
-   metrics:[["Demos booked",38,42],["Talk-time (hrs/rep)",46,55],["Win rate",22,25,"%"],["Pipeline created","$1.9M","$2.2M"]]},
-  {id:"marketing",name:"Marketing",icon:"📣",color:"#4EA8FF",cap:160,util:0.79,
-   out:{label:"Pipeline sourced",val:2.4,tgt:2.6,unit:"$M"}, eff:92,
-   metrics:[["MQLs",470,450],["SQLs",132,140],["CAC","$4.9K","$4.2K"],["Blended ROAS","4.1x","4.5x"]]},
-  {id:"bd",name:"Business Dev",icon:"🤝",color:"#2FD6A5",cap:150,util:0.74,
-   out:{label:"Partner pipeline",val:0.9,tgt:1.2,unit:"$M"}, eff:78,
-   metrics:[["Partnerships signed",2,3],["Outbound meetings",41,50],["Partner-sourced logos",6,8]]},
+  {id:"sales",name:"Sales",icon:"💰",color:"#7C5CFC",cap:110,util:0.84,
+   out:{label:"New bookings",val:0.98,tgt:1.10,unit:"$M"}, eff:89,
+   metrics:[["Demos booked",88,96],["Talk-time (hrs/rep)",48,55],["Win rate",25,27,"%"],["ACV (avg)","$300K","$280K"],["Pipeline created","$5.4M","$6.0M"]]},
+  {id:"marketing",name:"Marketing",icon:"📣",color:"#4EA8FF",cap:160,util:0.80,
+   out:{label:"Pipeline sourced",val:4.3,tgt:4.6,unit:"$M"}, eff:93,
+   metrics:[["MQLs",690,660],["SQLs",178,190],["CAC","$78K","$70K"],["Blended ROAS","3.9x","4.3x"]]},
+  {id:"bd",name:"Business Dev",icon:"🤝",color:"#2FD6A5",cap:150,util:0.76,
+   out:{label:"Partner pipeline",val:2.6,tgt:3.2,unit:"$M"}, eff:80,
+   metrics:[["Partnerships (Accenture, AWS…)",5,6],["Outbound meetings",58,70],["Partner-sourced logos",9,12]]},
   {id:"product",name:"Product",icon:"🧭",color:"#9B8CFF",cap:150,util:0.85,
    out:{label:"Roadmap adherence",val:86,tgt:90,unit:"%"}, eff:95,
    metrics:[["Features shipped",7,8],["Discovery interviews",22,20],["PRDs delivered",5,5]]},
-  {id:"tech",name:"Engineering",icon:"⚙️",color:"#6EC6FF",cap:150,util:0.83,
-   out:{label:"Velocity (pts)",val:214,tgt:220,unit:""}, eff:97,
-   metrics:[["Deploys / week",18,15],["Cycle time (d)",3.1,3.5],["Uptime",99.94,99.9,"%"],["PRs merged",184,170]]},
+  {id:"tech",name:"Engineering",icon:"⚙️",color:"#6EC6FF",cap:150,util:0.84,
+   out:{label:"Velocity (pts)",val:392,tgt:400,unit:""}, eff:97,
+   metrics:[["Deploys / week",26,22],["Cycle time (d)",2.9,3.5],["Platform uptime",99.95,99.9,"%"],["Sim-engine runs (k)",41,35],["PRs merged",318,300]]},
   {id:"testing",name:"QA / Testing",icon:"🧪",color:"#3DD7C2",cap:150,util:0.80,
    out:{label:"Escape rate",val:1.8,tgt:2.0,unit:"%"}, eff:104, low:true,
    metrics:[["Automation coverage",71,75,"%"],["Defects caught",143,120],["Critical escapes",2,3]]},
@@ -401,22 +402,23 @@ const DEPTS = [
   {id:"pm",name:"Project Mgmt",icon:"🗂️",color:"#F6B23B",cap:150,util:0.86,
    out:{label:"On-time delivery",val:82,tgt:90,unit:"%"}, eff:84,
    metrics:[["Active projects",14,12],["Milestone hit rate",82,90,"%"],["Avg slippage (d)",4.2,2.0]]},
-  {id:"impl",name:"Implementation",icon:"🚀",color:"#FF8A5B",cap:150,util:0.88,
-   out:{label:"Time-to-value (d)",val:34,tgt:30,unit:""}, eff:90, low:true,
-   metrics:[["Go-lives",9,10],["Onboarding NPS",61,60],["Active deployments",47,45]]},
-  {id:"support",name:"Support",icon:"🎧",color:"#5AD1A0",cap:150,util:0.90,
-   out:{label:"CSAT",val:89.6,tgt:92,unit:"%"}, eff:87,
-   metrics:[["Tickets / mo",512,480],["First response (h)",2.4,2.0],["Resolution (h)",11,9],["Backlog",63,40]]},
+  {id:"impl",name:"Implementation",icon:"🚀",color:"#FF8A5B",cap:150,util:0.89,
+   out:{label:"Time-to-value (d)",val:41,tgt:35,unit:""}, eff:88, low:true,
+   metrics:[["VPC / on-prem go-lives",6,8],["Onboarding NPS",63,60],["Active deployments",34,32]]},
+  {id:"support",name:"Support",icon:"🎧",color:"#5AD1A0",cap:150,util:0.91,
+   out:{label:"CSAT",val:90.4,tgt:92,unit:"%"}, eff:88,
+   metrics:[["Tickets / mo",760,700],["First response (h)",2.2,2.0],["Resolution (h)",10,9],["Backlog",84,60]]},
   {id:"ops",name:"Operations",icon:"🔧",color:"#9DA9C2",cap:150,util:0.77,
    out:{label:"SLA adherence",val:94,tgt:95,unit:"%"}, eff:96,
    metrics:[["Process SLAs met",94,95,"%"],["Cost / txn","$0.42","$0.45"],["Tooling uptime",99.7,99.5,"%"]]},
   {id:"hr",name:"People / HR",icon:"🧑‍💼",color:"#FF5C7A",cap:150,util:0.84,
    out:{label:"Time-to-hire (d)",val:39,tgt:35,unit:""}, eff:83, low:true,
-   metrics:[["Open roles",174,"—"],["Offer acceptance",78,85,"%"],["Attrition (annual)",11,10,"%"],["eNPS",44,50]]},
+   metrics:[["Open roles",172,"—"],["Offer acceptance",78,85,"%"],["Attrition (annual)",12,10,"%"],["eNPS",46,50]]},
 ];
-// benchmark allocation % of company for a ~$8M AI SaaS scaling to $100M
-const ALLOC = {tech:.26,product:.07,testing:.05,data:.05,sales:.15,bd:.05,marketing:.09,impl:.07,support:.07,pm:.03,ops:.03,hr:.03};
-const ACTUAL = {tech:15,product:4,testing:2,data:2,sales:6,bd:2,marketing:4,impl:4,support:5,pm:2,ops:3,hr:3};
+// benchmark allocation % of company for an AI SaaS scaling toward $100M
+const ALLOC = {tech:.28,product:.07,testing:.05,data:.05,sales:.15,bd:.04,marketing:.08,impl:.08,support:.06,pm:.03,ops:.03,hr:.03};
+const ACTUAL = {tech:26,product:6,testing:4,data:4,sales:13,bd:4,marketing:7,impl:7,support:5,pm:3,ops:4,hr:5}; // ~88 today
+const OPEN   = {tech:58,product:8,testing:5,data:8,sales:30,bd:6,marketing:14,impl:18,support:11,pm:2,ops:3,hr:9}; // 172 open reqs
 function recTotal(){ return Math.round(A.arr*1000/A.fte); }
 function targetHeads(id){ return Math.max(1,Math.round(recTotal()*ALLOC[id])); }
 
@@ -497,9 +499,9 @@ function renderKPIs(){
     {label:"ARR",val:money(k.arr),chip:["g",pct(k.growth)+" YoY"],spark:S.arr,c:"#7C5CFC"},
     {label:"Net new ARR (yr)",val:money(k.netNewYr),chip:["g","building"],spark:S.newARR,c:"#4EA8FF"},
     {label:"Annual net burn",val:money(k.burn),chip:["w",money(k.burn/12)+"/mo"],spark:S.burnMo,c:"#FF8A5B"},
-    {label:"Runway",val:k.runway+" mo",chip:[k.runway>18?"g":k.runway>12?"w":"b","$14.2M bank"],spark:S.arr.map(v=>k.runway),c:"#2FD6A5"},
+    {label:"Runway",val:k.runway+" mo",chip:[k.runway>18?"g":k.runway>12?"w":"b","$"+k.cashBank+"M bank"],spark:S.arr.map(v=>k.runway),c:"#2FD6A5"},
     {label:"Burn multiple",val:k.burnMult+"x",chip:[k.burnMult<=1.5?"g":k.burnMult<=2?"w":"b", k.burnMult<=1.5?"efficient":k.burnMult<=2?"watch":"heavy"],spark:S.burnMo.map((v,i)=>v/Math.max(0.05,S.newARR[i])),c:"#F6B23B"},
-    {label:"Rule of 40",val:k.ruleOf40, chip:[k.ruleOf40>=40?"g":k.ruleOf40>=25?"w":"b", "growth "+k.growth+" · fcf "+Math.round(-(k.burn/k.arr)*100)],spark:S.arr,c:"#C77DFF"},
+    {label:"ARR / employee",val:"$"+k.arrPerFte+"K",chip:[k.arrPerFte>=A.fte?"g":"w", k.customers+" customers"],spark:S.arr.map((v,i)=>v*1000/S.headcount[i]),c:"#C77DFF"},
   ];
   $("#kpiRow").innerHTML = items.map(it=>`
     <div class="card kpi">
@@ -530,7 +532,7 @@ function renderEff(){
   const rows=[
     ["ARR / employee","$"+k.arrPerFte+"K", k.arrPerFte>=A.fte?"g":"w", "target $"+A.fte+"K", clamp(k.arrPerFte/A.fte,0,1.3)],
     ["Burn multiple",k.burnMult+"x", k.burnMult<=1.5?"g":k.burnMult<=2?"w":"b","target ≤1.5x", clamp(1.5/k.burnMult,0,1.3)],
-    ["Rule of 40",k.ruleOf40, k.ruleOf40>=40?"g":k.ruleOf40>=25?"w":"b","target ≥40", clamp(k.ruleOf40/40,0,1.3)],
+    ["Cash runway",k.runway+" mo", k.runway>18?"g":k.runway>12?"w":"b","post Series B", clamp(k.runway/36,0,1.2)],
     ["Gross margin",k.gm+"%","g","target ≥70%",clamp(k.gm/80,0,1.2)],
     ["Net revenue retention",k.nrr+"%","g","target ≥110%",clamp(k.nrr/125,0,1.1)],
     ["CAC payback",k.cacPay+" mo", k.cacPay<=12?"g":k.cacPay<=15?"w":"b","target ≤12 mo",clamp(12/k.cacPay,0,1.2)],
@@ -543,16 +545,16 @@ function renderEff(){
 }
 
 function renderHC(){
-  const rec=recTotal(), act=Object.values(ACTUAL).reduce((a,b)=>a+b,0);
-  $("#hcTotals").textContent = `${act} today · ${rec} recommended @ $${A.fte}K/FTE`;
-  const rows = DEPTS.map(d=>{ const t=targetHeads(d.id),a=ACTUAL[d.id]; return {name:d.name,a,t,color:d.color,delta:a-t}; });
+  const rec=recTotal(), act=Object.values(ACTUAL).reduce((a,b)=>a+b,0), open=Object.values(OPEN).reduce((a,b)=>a+b,0);
+  $("#hcTotals").textContent = `${act} today · ${open} open reqs · ${rec} right-sized for $${A.arr}M @ $${A.fte}K/FTE`;
+  const rows = DEPTS.map(d=>{ const t=targetHeads(d.id),a=ACTUAL[d.id]; return {name:d.name,a,t,o:OPEN[d.id],color:d.color,delta:a-t}; });
   const maxV=Math.max(...rows.map(r=>Math.max(r.a,r.t)));
   $("#hcHealth").innerHTML = rows.map(r=>`
     <div class="hrow"><div class="nm">${r.name}</div>
       <div class="track"><div class="fill" style="width:${r.a/maxV*100}%;background:${r.delta>1?'var(--bad)':r.delta< -0.0001?'var(--warn)':'var(--good)'}"></div>
-        <div class="tgt" style="left:${r.t/maxV*100}%" title="target ${r.t}"></div></div>
-      <div class="num">${r.a} / ${r.t}${r.delta!==0?` <span class="chip ${r.delta>0?'b':'w'}" style="padding:0 5px">${r.delta>0?'+':''}${r.delta}</span>`:''}</div>
-    </div>`).join("") + `<div class="hint" style="margin-top:10px">▏ marker = benchmark target. Red = over benchmark, amber = under (GTM under-hiring while pushing growth is the one to watch).</div>`;
+        <div class="tgt" style="left:${r.t/maxV*100}%" title="benchmark ${r.t}"></div></div>
+      <div class="num">${r.a} / ${r.t} <span class="chip n" style="padding:0 5px" title="open reqs">+${r.o} open</span></div>
+    </div>`).join("") + `<div class="hint" style="margin-top:10px">▏ marker = benchmark for today's ARR. Headcount is roughly right-sized for $${A.arr}M — the real story is <b>${open} open reqs</b> pre-building for $100M. The risk isn't under-hiring, it's <b>sequencing</b> 172 hires against a 39-day time-to-hire.</div>`;
 }
 
 function renderHeatmap(){
@@ -647,16 +649,16 @@ function renderScatter(){
 function buildFeed(){
   const k=kpis();
   return [
-    {sev:"bad",dept:"Finance",ic:"🔥",t:"Burn multiple at "+k.burnMult+"x — above the 1.5x guardrail",d:"Spending ~$"+(A.burn/Math.max(0.1,k.netNewYr)).toFixed(2)+" to add $1 of net-new ARR. Growth is strong but capital efficiency is the board's first question.",action:"Model a path to <1.5x: which GTM dollar has the worst marginal return?",time:"2h ago",metric:"+0.4x MoM"},
-    {sev:"warn",dept:"Sales",ic:"📉",t:"Sales at 88% of bookings target with talk-time 16% under plan",d:"Reps averaging 46 productive hrs vs 55 target. Demo-to-ARR correlation is 0.8+ — the gap is capacity, not conversion.",action:"Two open sales seats vs benchmark. Prioritise the GTM hire; each rep ≈ $0.5M pipeline.",time:"4h ago",metric:"−12% vs target"},
-    {sev:"good",dept:"Revenue",ic:"🚀",t:"NRR holding at 118% — expansion engine intact",d:"Existing customers grew 18% net of churn. Pushing to $100M ARR is far cheaper through NRR than new logos.",action:"Protect it: fund CS/implementation before it slips below 115%.",time:"6h ago",metric:"NRR 118%"},
-    {sev:"info",dept:"People",ic:"🧑‍💼",t:"174 open roles against a 39-day time-to-hire",d:"Recruiting throughput is the hidden constraint on the $100M plan. Offer acceptance at 78% (target 85%) is leaking candidates.",action:"Fix acceptance rate before opening more reqs — 7pts of acceptance ≈ 12 extra hires/quarter.",time:"9h ago",metric:"174 reqs"},
-    {sev:"warn",dept:"Support",ic:"🎧",t:"CSAT dipped to 89.6%, below the 92% floor",d:"Ticket volume rose with the customer base (r=0.9 tickets↔customers) but headcount didn't. Backlog up to 63.",action:"Support is over benchmark on heads yet under on CSAT — it's a process/tooling issue, not a hiring one.",time:"11h ago",metric:"−2.4 pts"},
-    {sev:"good",dept:"Engineering",ic:"⚙️",t:"Eng efficiency at 97 with 99.94% uptime",d:"Velocity steady, cycle time down to 3.1 days, deploys up 20%. The build engine is healthy heading into scale.",action:"Bank the goodwill — this is where to add the next 3 heads for the $100M roadmap.",time:"14h ago",metric:"eff 97"},
-    {sev:"bad",dept:"Project Mgmt",ic:"🗂️",t:"On-time delivery at 82% — lowest efficiency team (84)",d:"Milestone slippage averaging 4.2 days across 14 active projects. Downstream risk to implementation go-lives.",action:"Cap WIP: 14 active projects on 2 PMs is over capacity. Either add a PM or cut concurrent projects.",time:"1d ago",metric:"−8 pts"},
-    {sev:"info",dept:"Marketing",ic:"📣",t:"CAC drifting to $4.9K vs $4.2K target as spend scales",d:"Blended ROAS still 4.1x. Correlation shows spend→MQL is strong but MQL→bookings is weakening — top-of-funnel inflating.",action:"Shift budget from volume channels to the ones with the tightest MQL→ARR correlation.",time:"1d ago",metric:"+$0.7K CAC"},
-    {sev:"good",dept:"QA",ic:"🧪",t:"Escape rate 1.8% beats the 2.0% ceiling",d:"Automation coverage at 71%, 143 defects caught pre-release. Quality isn't the bottleneck to shipping faster.",action:"Push automation to 75% to hold this as release cadence climbs.",time:"2d ago",metric:"eff 104"},
-    {sev:"warn",dept:"Implementation",ic:"🚀",t:"Time-to-value at 34 days vs 30-day target",d:"Onboarding NPS healthy at 61, but slower TTV delays expansion revenue that feeds the 118% NRR.",action:"Every 4 days of TTV ≈ one quarter of delayed expansion. Standardise the first-value playbook.",time:"2d ago",metric:"+4 days"},
+    {sev:"good",dept:"Revenue",ic:"🚀",t:"ARR crosses $12M — ~200% QoQ, roughly 20× in 12 months",d:"From ~$650K (Q3'25) to $12M (Jun'26). Growth is the story; the board's next question is whether the burn multiple holds as the base gets larger.",action:"Lock the $100M-ARR operating plan now — quarterly hiring and burn gates tied to net-new ARR, not calendar.",time:"2h ago",metric:"$12M ARR"},
+    {sev:"bad",dept:"Finance",ic:"🔥",t:"Burn multiple at "+k.burnMult+"x — above the 1.5x guardrail",d:"Spending ~$"+(A.burn/Math.max(0.1,k.netNewYr)).toFixed(2)+" to add $1 of net-new ARR. Fine at hypergrowth, but the $100M Series B buys the right to prove efficiency, not to ignore it.",action:"Instrument marginal ROI per GTM dollar. Which channel / segment has the worst payback as you scale?",time:"3h ago",metric:k.burnMult+"x"},
+    {sev:"info",dept:"People",ic:"🧑‍💼",t:"172 open roles against a 39-day time-to-hire",d:"Recruiting throughput — not capital — is the binding constraint on the $100M plan. Offer acceptance at 78% (target 85%) is leaking candidates before they start.",action:"Sequence the 172 reqs against ARR milestones; fix the 78% acceptance rate before opening more — 7pts ≈ ~12 extra hires/quarter.",time:"6h ago",metric:"172 reqs"},
+    {sev:"good",dept:"Revenue",ic:"💎",t:"NRR at 124% — expansion engine is the cheapest path to $100M",d:"75% of customers already run 2+ agents; land-and-expand inside 32 enterprise logos beats chasing net-new logos on CAC.",action:"Fund implementation + CS ahead of sales — protect NRR before it slips below 120%.",time:"8h ago",metric:"NRR 124%"},
+    {sev:"warn",dept:"Sales",ic:"📉",t:"Bookings at 89% of target with talk-time 13% under plan",d:"AEs averaging 48 productive hrs vs 55 target. Demos↔ARR correlation is 0.7+ — the gap is capacity, not conversion. 30 open sales reqs.",action:"Prioritise filling the AE bench; at ~$300K ACV each rep carries real pipeline. Capacity is the lever, per the correlation view.",time:"11h ago",metric:"−11% vs target"},
+    {sev:"warn",dept:"Support",ic:"🎧",t:"CSAT at 90.4%, below the 92% floor as customers scale",d:"Enterprise tickets rose with the customer/agent base (r=0.9 tickets↔customers) faster than support headcount. Backlog at 84.",action:"This is process/tooling, not just heads — deflect with agent-assisted support before adding the 11 open reqs.",time:"14h ago",metric:"−1.6 pts"},
+    {sev:"good",dept:"Engineering",ic:"⚙️",t:"Eng efficiency 97 with 99.95% platform uptime",d:"Cycle time down to 2.9 days, deploys up, 41k Agent-Simulation runs. The core sovereign-AI platform is healthy heading into scale.",action:"58 open eng reqs — protect velocity by staging onboarding so new hires don't drag cycle time.",time:"1d ago",metric:"eff 97"},
+    {sev:"warn",dept:"Implementation",ic:"🚀",t:"Time-to-value at 41 days vs 35-day target",d:"VPC / on-prem (zero-egress) deployments are inherently heavier to stand up. Slower TTV delays the expansion revenue that feeds 124% NRR.",action:"Productise the on-prem go-live playbook; every ~5 days of TTV ≈ a quarter of delayed expansion.",time:"1d ago",metric:"+6 days"},
+    {sev:"bad",dept:"Project Mgmt",ic:"🗂️",t:"On-time delivery 82% — lowest-efficiency team",d:"Milestone slippage averaging 4+ days; downstream risk to implementation go-lives and customer trust at enterprise accounts.",action:"Cap WIP — the concurrent-project load on 3 PMs is over capacity. Add a PM or cut parallelism.",time:"2d ago",metric:"−8 pts"},
+    {sev:"info",dept:"Marketing",ic:"📣",t:"CAC drifting to $78K as enterprise spend scales",d:"Blended ROAS still ~3.9x. spend→MQL stays strong but MQL→booking is softening — top-of-funnel inflating relative to closed ARR.",action:"Reallocate budget toward the channels with the tightest MQL→ARR correlation (see correlation view).",time:"2d ago",metric:"+$8K CAC"},
   ];
 }
 const FEED=buildFeed();
