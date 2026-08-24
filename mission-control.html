@@ -193,6 +193,20 @@
   .sc-big{font-family:var(--serif);font-size:26px;font-weight:700}
   .sc-li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dashed var(--border);font-size:13px}
   .sc-li:last-child{border:0}.sc-li b{font-variant-numeric:tabular-nums}
+  .sc-stats{display:flex;gap:8px}
+  .sc-stat{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:11px;padding:9px 10px;min-width:0}
+  .sc-stat .k{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sc-stat .v{font-size:17px;font-weight:700;font-family:var(--serif);font-variant-numeric:tabular-nums;margin-top:2px}
+  .sc-sub{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-top:2px}
+  .sc-bar{display:flex;align-items:center;gap:9px;font-size:12px;margin:5px 0}
+  .sc-bar .bl{width:130px;flex:none;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sc-bar .bt{flex:1;height:8px;background:var(--bg2);border-radius:5px;overflow:hidden}
+  .sc-bar .bt>i{display:block;height:100%;border-radius:5px}
+  .sc-bar .bv{width:48px;flex:none;text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+  .sctab{width:100%;border-collapse:collapse;font-size:11.5px}
+  .sctab th{text-align:left;color:var(--muted);font-size:9.5px;text-transform:uppercase;letter-spacing:.3px;padding:4px 5px;font-weight:700}
+  .sctab td{padding:4px 5px;border-top:1px solid var(--border);font-variant-numeric:tabular-nums}
+  .sctab th.n,.sctab td.n{text-align:right}
   .sc-rec{background:var(--bg2);border:1px dashed var(--border2);border-radius:10px;padding:9px 11px;font-size:12.5px;margin-top:auto}
   .deck-controls{display:flex;justify-content:center;gap:16px;margin-top:16px}
   .cbtn{width:56px;height:56px;border-radius:50%;border:1px solid var(--border2);background:var(--surface);font-size:22px;cursor:pointer;display:grid;place-items:center;transition:.15s;color:var(--text)}
@@ -704,44 +718,86 @@ function renderMIS(){
 }
 
 /* ================= DAILY BRIEF (swipe deck from Supabase) ================= */
+function cnum(v){ return `<b style="color:${scoreColor(v)}">${v}</b>`; }
+function rnum(v){ return `<b style="color:${v>=55?'var(--bad)':v>=40?'var(--warn)':'var(--good)'}">${v}</b>`; }
+function deptName(id){ const d=DB.departments.find(x=>x.id===id); return d?d.name:id; }
 function buildBrief(){
-  const o=computeSim(SIM), cards=[];
-  cards.push({id:'mission',ic:'🎯',tag:'Mission',color:'#DE7A45',title:`$100M mission — ${o.prob}% probability`,
-    verdict:o.prob>=70?'On track':'Attention', vgood:o.prob>=70,
-    lines:[`Forecast <b>${fmtM(o.forecast)}</b> against the $100M target.`,`Revenue gap <b>${fmtM(o.gap)}</b> · pipeline gap <b>${fmtM0(o.pipeGap)}</b>.`],
+  const o=computeSim(SIM), m=DB.mission, live=+m.current_arr_m, cards=[];
+
+  // 1 — Mission
+  const gmax=Math.max(...DB.gap_components.map(x=>+x.amount_m));
+  cards.push({id:'mission',ic:'🎯',tag:'Mission · $100M',color:'#DE7A45',
+    title:`On track? ${o.prob}% probability`, verdict:o.prob>=70?'On track':'Attention', vgood:o.prob>=70,
+    stats:[['Forecast',fmtM(o.forecast)],['Revenue gap',fmtM(o.gap)],['Pipeline gap',fmtM0(o.pipeGap)]],
+    lines:[`To close it we need ~<b>${o.reqCust}</b> customers @ $500K and <b>${fmtM0(o.reqPipe)}</b> qualified pipeline (have ${fmtM0(o.pipeAvail)}).`],
+    barsTitle:'Where the gap comes from',
+    bars:DB.gap_components.map(x=>[x.label,+x.amount_m,gmax,'var(--bad)',fmtM(+x.amount_m)]),
     rec:o.prob>=70?'Hold course — protect the levers driving the forecast.':'The gap is mostly pipeline generation — fund it first.'});
+
+  // 2 — Revenue MIS (vertical)
+  const rev=DB.revenue_breakdown.filter(r=>r.dimension==='Vertical');
+  cards.push({id:'rev',ic:'💰',tag:'Revenue MIS',color:'#4CB7A4',title:'ARR by vertical',
+    stats:[['Live ARR',fmtM(live)],['Contracted',fmtM(+(live*1.2).toFixed(1))],['Gross margin',Math.round(m.gross_margin*100)+'%']],
+    table:{cols:[{h:'Vertical'},{h:'ARR',n:1},{h:'%',n:1},{h:'Target',n:1},{h:'YoY',n:1}],
+      rows:rev.map(r=>[r.name,fmtM(+r.arr_m),Math.round(r.arr_m/live*100)+'%',fmtM(+r.target_m),'+'+r.growth+'%'])},
+    rec:'BFSI is ~46% of ARR — deepen there while scaling healthcare & tech.'});
+
+  // 3 — GTM productivity MIS (per resource)
+  const g=DB.gtm_productivity.filter(x=>+x.bookings_target_m>0);
+  cards.push({id:'gtm',ic:'📞',tag:'GTM productivity',color:'#F0AD46',title:'Per-resource output',
+    stats:[['Pipeline',fmtM0(+m.current_pipeline_m)],['Win rate',Math.round(m.win_rate*100)+'%'],['ACV','$'+m.avg_acv_k+'K']],
+    table:{cols:[{h:'Team'},{h:'Cap',n:1},{h:'Talk',n:1},{h:'Demos',n:1},{h:'Attain',n:1}],
+      rows:g.map(x=>[x.team.replace(' AE','').replace('Partnerships / ',''),x.capacity_hrs+'h',x.talk_time_hrs+'h',x.demos+'/'+x.demos_target,cnum(Math.round(x.bookings_m/x.bookings_target_m*100))+'%'])},
+    rec:'Talk-time is under plan — capacity, not conversion, is the sales constraint.'});
+
+  // 4 — ALL departments scorecard
+  cards.push({id:'depts',ic:'🏢',tag:'All departments',color:'#C88AA8',title:`Team scorecard · ${DB.departments.length} teams`,
+    lines:[`Productivity vs alignment — a team can be productive and still work off-mission.`],
+    table:{cols:[{h:'Team'},{h:'HC',n:1},{h:'Prod',n:1},{h:'Align',n:1},{h:'Strat',n:1}],
+      rows:DB.departments.map(d=>[`${d.icon} ${d.name}`,d.headcount,cnum(d.productivity),cnum(d.alignment),Math.round(d.strategic_capacity*100)+'%'])},
+    rec:'Engineering & Support: high output, low alignment — redirect capacity to $100M priorities.'});
+
+  // 5 — Critical & opportunity signals (2)
   DB.decision_feed.filter(f=>f.severity==='critical'||f.severity==='opportunity').slice(0,2).forEach(f=>cards.push({
-    id:'sig'+f.id,ic:sevIcon[f.severity],tag:f.kind,color:f.severity==='opportunity'?'#48CFA1':'#F0685C',
+    id:'sig'+f.id, ic:sevIcon[f.severity], tag:`${f.kind} · ${deptName(f.department_id)}`, color:f.severity==='opportunity'?'#48CFA1':'#F0685C',
     title:f.title, big:+f.dollar_impact_m?fmtM(+f.dollar_impact_m):null, bigColor:f.severity==='opportunity'?'var(--good)':'var(--bad)',
-    lines:[f.why_matters], rec:f.recommendation+(f.proposed_initiative?` → ${f.proposed_initiative}`:'')}));
-  const pipe=DB.accounts.filter(a=>+a.churn_risk<40).sort((a,b)=>b.expansion_potential-a.expansion_potential).slice(0,5);
-  cards.push({id:'pipe',ic:'📈',tag:'Top pipeline',color:'#4CB7A4',title:'Biggest expansion opportunities',
-    items:pipe.map(a=>[`${a.name} <span class="hint">${a.vertical}</span>`,`${fmtK(a.arr_k)} · exp ${a.expansion_potential}`]),
-    rec:'Expansion is the cheapest path to $100M — line up QBRs this week.'});
-  const perf=DB.departments.slice().sort((a,b)=>b.productivity-a.productivity).slice(0,5);
-  cards.push({id:'perf',ic:'🏅',tag:'Top performers',color:'#F0AD46',title:'Highest-performing teams',
-    items:perf.map(d=>[`${d.icon} ${d.name}`,`prod ${d.productivity} · align ${d.alignment}`]),
-    rec:'Protect and clone what these teams are doing right.'});
-  const risk=DB.accounts.filter(a=>+a.churn_risk>=55).sort((a,b)=>b.churn_risk-a.churn_risk).slice(0,5);
+    lines:[f.why_matters, `<span style="color:var(--muted)">Root cause —</span> ${f.root_cause}`],
+    rec:f.recommendation+(f.proposed_initiative?` → ${f.proposed_initiative}`:'')}));
+
+  // 6 — Churn risk MIS
+  const risk=DB.accounts.filter(a=>+a.churn_risk>=55).sort((a,b)=>b.churn_risk-a.churn_risk).slice(0,6);
   const rArr=risk.reduce((s,a)=>s+ +a.arr_k,0);
   cards.push({id:'risk',ic:'🔻',tag:'Churn risk',color:'#F0685C',title:`${fmtK(rArr)} ARR at risk`, verdict:'Act', vgood:false,
-    items:risk.map(a=>[`${a.name} <span class="hint">${a.vertical}</span>`,`risk ${a.churn_risk} · ${fmtK(a.arr_k)}`]),
-    rec:'Launch a retention sprint on the highest-ARR, highest-risk accounts.'});
+    stats:[['Accounts',risk.length],['ARR at risk',fmtK(rArr)],['Peak risk',risk[0].churn_risk]],
+    table:{cols:[{h:'Account'},{h:'Vertical'},{h:'ARR',n:1},{h:'Risk',n:1}],
+      rows:risk.map(a=>[a.name,a.vertical,fmtK(a.arr_k),rnum(a.churn_risk)])},
+    rec:'Launch a Top Account Retention Sprint on the highest-ARR, highest-risk logos.'});
+
+  // 7 — Builder → Enterprise PLG engine
+  cards.push({id:'plg',ic:'🚀',tag:'Builder → Enterprise',color:'#48CFA1',title:'PLG engine',
+    lines:[`Lyzr's data-led motion: 80k free builders converting down to enterprise logos.`],
+    table:{cols:[{h:'Stage'},{h:'Count',n:1},{h:'Conv.',n:1}],
+      rows:DB.builder_funnel.map((s,i)=>[s.stage,(+s.count).toLocaleString(),i===0?'—':(s.count/DB.builder_funnel[i-1].count*100).toFixed(1)+'%'])},
+    rec:'Partner + PLG is the highest-converting channel yet under-funded — invest there.'});
+
   return cards;
 }
 let DECK=[], deckPos=0, hist=[], noted={};
 function cardHTML(c,depth){
   const topCls=depth===0?' top':'';
   const st=depth>0?`style="transform:translateY(${depth*14}px) scale(${(1-depth*0.045).toFixed(3)});opacity:${1-depth*0.16};pointer-events:none"`:'';
-  const body = (c.lines?c.lines.map(l=>`<div class="sc-line">${l}</div>`).join(''):'')
-    + (c.big?`<div class="sc-big" style="color:${c.bigColor||'var(--text)'}">${c.big}</div>`:'')
-    + (c.items?`<div>${c.items.map(it=>`<div class="sc-li"><span>${it[0]}</span><b>${it[1]}</b></div>`).join('')}</div>`:'');
+  const stats = c.stats?`<div class="sc-stats">${c.stats.map(s=>`<div class="sc-stat"><div class="k">${s[0]}</div><div class="v">${s[1]}</div></div>`).join('')}</div>`:'';
+  const lines = c.lines?c.lines.map(l=>`<div class="sc-line">${l}</div>`).join(''):'';
+  const big = c.big?`<div class="sc-big" style="color:${c.bigColor||'var(--text)'}">${c.big}</div>`:'';
+  const bars = c.bars?`<div>${c.barsTitle?`<div class="sc-sub">${c.barsTitle}</div>`:''}${c.bars.map(bt=>`<div class="sc-bar"><span class="bl">${bt[0]}</span><span class="bt"><i style="width:${clamp(bt[1]/bt[2]*100,3,100)}%;background:${bt[3]||'var(--accent)'}"></i></span><span class="bv">${bt[4]!=null?bt[4]:bt[1]}</span></div>`).join('')}</div>`:'';
+  const table = c.table?`<table class="sctab"><thead><tr>${c.table.cols.map(cl=>`<th class="${cl.n?'n':''}">${cl.h}</th>`).join('')}</tr></thead><tbody>${c.table.rows.map(r=>`<tr>${r.map((cell,ci)=>`<td class="${c.table.cols[ci].n?'n':''}">${cell}</td>`).join('')}</tr>`).join('')}</tbody></table>`:'';
+  const items = c.items?`<div>${c.items.map(it=>`<div class="sc-li"><span>${it[0]}</span><b>${it[1]}</b></div>`).join('')}</div>`:'';
   return `<div class="swipe-card${topCls}" data-id="${c.id}" ${st}>
     <div class="stamp skip">SKIP</div><div class="stamp note">★ TODAY</div>
     <div class="sc-head"><span class="ic" style="background:${c.color}22">${c.ic}</span>
       <div><div class="sc-tag">${c.tag}</div><div class="sc-title">${c.title}</div></div>
       ${c.verdict?`<span class="sc-verdict" style="background:${c.vgood?'rgba(72,207,161,.16)':'rgba(240,104,92,.16)'};color:${c.vgood?'var(--good)':'var(--bad)'}">${c.verdict}</span>`:''}</div>
-    ${body}
+    ${stats}${lines}${big}${bars}${table}${items}
     <div class="sc-rec">▸ ${c.rec}</div></div>`;
 }
 function renderDeck(){
